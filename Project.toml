@@ -1,0 +1,13 @@
+name = "KM3Acoustics"
+uuid = "e21ca9ae-d296-42ad-b37a-731a42f35e62"
+authors = ["Markus Pirke <markus.pirke@web.de> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
