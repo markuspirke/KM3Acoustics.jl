@@ -18,7 +18,7 @@ end
 
 function read_asignal(filename::AbstractString,fourbyte_length::Int)
 
-    container = Vector{UInt32}(undef,fourbyte_length) #would be better to use a container of length 3 here and only read in the first 3 4 byte blocks
+    container = Vector{UInt32}(undef,3)
     read!(filename,container)
     utc_seconds = container[1]
     ns_cycles = container[2]
