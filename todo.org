@@ -1,0 +1,11 @@
+#+title: Todo
+#+author: Markus Pirke
+
+* IO binary files
+** every DOM has a acoustic detection unit (piezo crystal) ([[https://www.epj-conferences.org/articles/epjconf/pdf/2019/21/epjconf_arena2018_02007.pdf][hydrophone_km3net]]) which continously measures
+*** data is written as a binary file format ([[https://git.km3net.de/km3py/km3io/-/blob/master/src/km3io/acoustics.py][structure explained here]])
+*** TODO implement parser to read in the binary file
+*** TODO try to store the waveform as wav file and listen
+*** TODO plot the waveform
+** tripods are placed at the bottom of sea which emitt pings which can be detected in the waveforms
+*** TODO
