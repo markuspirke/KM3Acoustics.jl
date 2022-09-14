@@ -1,5 +1,5 @@
 
-f_s = 195312.5 #sampling frequency
+const f_s = 195312.5 #sampling frequency
 
 
 #DAQ_ADF_ANALYSIS_WINDOW_SIZE = 131072
@@ -31,7 +31,7 @@ function read_asignal(filename::AbstractString,fourbyte_length::Int)
     return ASignal(utc_seconds, ns_cycles, samples, pcm) #plug everthing into our data type
 end
 
-function plot_asignal(signal::ASignal, f_s=195312.5, l=frame_length) #this should be done as a recipe, but now just for convience
+function plot_asignal(signal::ASignal, f_s=f_s, l=frame_length) #this should be done as a recipe, but now just for convience
     T_s = 1/f_s * l
     ts = range(0,T_s,length=l)
 
@@ -42,11 +42,11 @@ function plot_asignal(signal::ASignal, f_s=195312.5, l=frame_length) #this shoul
     return p
 end
 
-function to_wav(signal::ASignal, path, f_s, gain_db=0.0)
+function to_wav(signal::ASignal, path::AbstractString, f_s=f_s, gain_db=0.0)
     pcm = signal.pcm
 
     if gain_db != 0.0
-        pcm *= 10^(0.1 * gain_db)
+        pcm *= 10.0^(0.1 * gain_db)
     end
 
     wavwrite(pcm, path, Fs=floor(Int,f_s))
