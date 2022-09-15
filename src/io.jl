@@ -1,3 +1,12 @@
+"""
+The photomultiplier tube of an optical module. The `id` stands for the DAQ
+channel ID.
+
+A non-zero status means the PMT is "not OK". Individual bits can be read out
+to identify the problem (see definitions/pmt_status.jl for the bit positions
+and check them using the `nthbitset()` function).
+
+"""
 struct PMT
     id::Int32
     pos::Position
@@ -7,12 +16,26 @@ struct PMT
 end
 
 
+"""
+A module's location in the detector where string represents the
+detection unit identifier and floor counts from 0 from the bottom
+to top. Base modules are sitting on floor 0 and optical modules
+on floor 1 and higher.
+
+"""
 struct Location
     string::Int32
     floor::Int8
 end
 
 
+"""
+Either a base module or an optical module. A non-zero status means the
+module is "not OK". Individual bits can be read out to identify the problem (see
+definitions/module_status.jl for the bit positions and check them using the
+`nthbitset()` function).
+
+"""
 struct DetectorModule
     id::Int32
     pos::Union{Position, Missing}
@@ -25,6 +48,10 @@ struct DetectorModule
 end
 
 
+"""
+A KM3NeT detector.
+
+"""
 struct Detector
     id::Int32
     validity::Union{DateRange, Missing}
@@ -34,6 +61,11 @@ struct Detector
 end
 
 
+"""
+    function Detector(filename::AbstractString)
+
+Create a `Detector` instance from a DETX file.
+"""
 function Detector(filename::AbstractString)
     open(filename, "r") do fobj
         Detector(fobj)
@@ -41,6 +73,11 @@ function Detector(filename::AbstractString)
 end
 
 
+"""
+    function Detector(io::IO)
+
+Create a `Detector` instance from an IO stream.
+"""
 function Detector(io::IO)
     lines = readlines(io)
     filter!(e->!startswith(e, "#") && !isempty(strip(e)), lines)
