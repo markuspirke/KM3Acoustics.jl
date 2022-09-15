@@ -2,7 +2,8 @@ struct PMT
     id::Int32
     pos::Position
     dir::Direction
-    status::Int32
+    t₀::Float64
+    status::Union{Int32, Missing}
 end
 
 
@@ -17,6 +18,7 @@ struct DetectorModule
     pos::Union{Position, Missing}
     location::Location
     n_pmts::Int8
+    pmts::Vector{PMT}
     q::Union{Quaternion, Missing}
     status::Union{Int32, Missing}
     t₀::Union{Float64, Missing}
@@ -47,11 +49,16 @@ function Detector(io::IO)
 
     if occursin("v", first_line)
         det_id, version = map(x->parse(Int,x), split(first_line, 'v'))
+        # TODO: reference grid is not read out
+        validity = DateRange(map(unix2datetime, map(x->parse(Float64, x), split(lines[2])))...)
+        utm_position = UTMPosition(map(x->parse(Float64, x), split(lines[3])[4:6])...)
         n_modules = parse(Int, lines[4])
         idx = 5
     else
         det_id, n_modules = map(x->parse(Int,x), split(first_line))
         version = 1
+        utm_position = missing
+        validity = missing
         idx = 2
     end
 
@@ -70,12 +77,13 @@ function Detector(io::IO)
             t₀ = missing
         end
         if version >= 5
-            status = parse(Float64, elements[13])
+            status = parse(Float64, elements[12])
         else
             status = missing
         end
         n_pmts = parse(Int, elements[end])
 
+        pmts = PMT[]
         for pmt in 1:n_pmts
             l = split(lines[idx+pmt])
             pmt_id = parse(Int,first(l))
@@ -83,11 +91,14 @@ function Detector(io::IO)
             t0 = parse(Float64,l[8])
             if version >= 3
                 pmt_status = parse(Int, l[9])
+            else
+                pmt_status = missing
             end
+            push!(pmts, PMT(pmt_id, Position(x, y, z), Direction(dx, dy, dz), t0, pmt_status))
         end
-        modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, q, status, t₀)
+        modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
         idx += n_pmts + 1
     end
 
-    Detector(det_id, missing, missing, n_modules, modules)
+    Detector(det_id, validity, utm_position, n_modules, modules)
 end

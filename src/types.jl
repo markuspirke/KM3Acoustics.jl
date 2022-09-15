@@ -25,6 +25,6 @@ struct Quaternion{T} <: FieldVector{4, T}
 end
 
 struct DateRange
-    from::Date
-    to::Date
+    from::DateTime
+    to::DateTime
 end
