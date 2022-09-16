@@ -1,6 +1,7 @@
-using KM3Acoustics
 using Test
 
+
 @testset "KM3Acoustics.jl" begin
-    # Write your tests here.
+    include("io.jl")
+    include("tools.jl")
 end
