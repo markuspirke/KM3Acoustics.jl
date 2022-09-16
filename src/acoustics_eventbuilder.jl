@@ -5,11 +5,8 @@ but their sum is.
 function remove_idevents(filename::AbstractString)
     df = CSV.read(filename,DataFrame)
 
-    transform!(df, [:UNIXTIMEBASE, :TOA_S] => +)
+    transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA)
     select!(df, Not([:UNIXTIMEBASE,:TOA_S]))
 
-    mask = nonunique(df)
-    mask = mask .== 0
-
-    return df[findall(mask), :]
+    return unique(df)
 end
