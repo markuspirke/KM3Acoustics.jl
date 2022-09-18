@@ -1,6 +1,7 @@
 module KM3Acoustics
 
 using Dates
+import Base: read
 
 using StaticArrays
 using WAV
@@ -10,7 +11,9 @@ using CSV
 using DataFrames
 
 export
-   read_asignal, plot_asignal, to_wav
+    Detector, Hydrophone,
+    read,
+    read_asignal, plot_asignal, to_wav
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
     include(inc)
