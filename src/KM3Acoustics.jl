@@ -24,6 +24,7 @@ end
 include("types.jl")
 include("tools.jl")
 include("io.jl")
+include("utils.jl")
 include("acoustics.jl")
 include("acoustics_eventbuilder.jl")
 end

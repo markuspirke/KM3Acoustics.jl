@@ -60,7 +60,7 @@ end
 """
     function read(filename::AbstractString, T::Type{Hydrophone})
 
-Reads a vector or `Hydrophone`s from an ASCII file.
+Reads a vector of `Hydrophone`s from an ASCII file.
 """
 function read(filename::AbstractString, T::Type{Hydrophone})
     hydrophones = T[]
@@ -78,31 +78,18 @@ end
 
 
 """
-    function piezoenabled(m::DetectorModule)
-
-Return `true` if the piezo is enabled, `false` otherwise.
-"""
-piezoenabled(m::DetectorModule) = !nthbitset(MODULE_STATUS.PIEZO_DISABLE, m.status)
-
-
-"""
-    function hydrophonenabled(m::DetectorModule)
-
-Return `true` if the hydrophone is enabled, `false` otherwise.
-"""
-hydrophoneenabled(m::DetectorModule) = !nthbitset(MODULE_STATUS.HYDROPHONE_DISABLE, m.status)
-
-"""
 A tripod installed on the seabed which sends acoustic signals to modules.
 """
 struct Tripod
     id::Int8
     pos::Position
 end
+
+
 """
     function read(filename:AbstractString, T::Tyoe{Tripod})
 
-Reads a vector or 'Tripod's from an ASCII file.
+Reads a vector of `Tripod`s from an ASCII file.
 """
 function read(filename::AbstractString, T::Type{Tripod})
     tripods = T[]
