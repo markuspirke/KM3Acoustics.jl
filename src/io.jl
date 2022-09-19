@@ -77,6 +77,32 @@ function read(filename::AbstractString, T::Type{Hydrophone})
 end
 
 """
+A tripod installed on the seabed which sends acoustic signals to modules.
+"""
+struct Tripod
+    id::Int8
+    pos::Position
+end
+"""
+    function read(filename:AbstractString, T::Tyoe{Tripod})
+
+Reads a vector or 'Tripod's from an ASCII file.
+"""
+function read(filename::AbstractString, T::Type{Tripod})
+    tripods = T[]
+    for line ∈ readlines(filename)
+        if startswith(line, "#")
+            continue
+        end
+        id, x, y, z = split(line)
+        id = parse(Int8, id)
+        pos = Position(parse.(Float64, [x, y, z])...)
+        push!(tripods, T(id, pos))
+    end
+    tripods
+end
+
+"""
 A KM3NeT detector.
 
 """

@@ -1,4 +1,4 @@
-import KM3Acoustics: Detector, Hydrophone, Position, UTMPosition, Location, Quaternion
+import KM3Acoustics: Detector, Hydrophone, Position, UTMPosition, Location, Quaternion, Tripod
 using Dates
 
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
@@ -43,5 +43,13 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
         @test Position(0.770, -0.065, 1.470) ≈ hydrophones[1].pos
         @test Location(28, 0) == hydrophones[end].location
         @test Position(0.770, -0.065, 1.470) ≈ hydrophones[end].pos
+    end
+    @testset "tripod" begin
+        tripods = read(joinpath(SAMPLES_DIR, "tripod.txt"), Tripod)
+        @test 3 == length(tripods)
+        @test 1 == tripods[1].id
+        @test Position(256877.500, 4743716.700, -2437.314) ≈ tripods[1].pos
+        @test 3 == tripods[end].id
+        @test Position(257096.200, 4743636.000, -2439.354) ≈ tripods[end].pos
     end
 end

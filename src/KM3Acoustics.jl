@@ -11,7 +11,7 @@ using CSV
 using DataFrames
 
 export
-    Detector, Hydrophone,
+    Detector, Hydrophone, Tripod,
     read,
     read_asignal, plot_asignal, to_wav
 
