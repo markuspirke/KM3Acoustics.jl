@@ -49,6 +49,34 @@ end
 
 
 """
+A hydrophone, typically installed in the base module of a KM3NeT detector's
+string.
+"""
+struct Hydrophone
+    location::Location
+    pos::Position
+end
+
+"""
+    function read(filename::AbstractString, T::Type{Hydrophone})
+
+Reads a vector or `Hydrophone`s from an ASCII file.
+"""
+function read(filename::AbstractString, T::Type{Hydrophone})
+    hydrophones = T[]
+    for line ∈ readlines(filename)
+        if startswith(line, "#")
+            continue
+        end
+        string, floor, x, y, z = split(line)
+        location = Location(parse(Int32, string), parse(Int8, floor))
+        pos = Position(parse.(Float64, [x, y, z])...)
+        push!(hydrophones, T(location, pos))
+    end
+    hydrophones
+end
+
+"""
 A KM3NeT detector.
 
 """
