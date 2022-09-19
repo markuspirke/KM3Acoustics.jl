@@ -1,0 +1,10 @@
+# Preliminary autononous acoustic beacon locations
+# Positions of ID 3 and 7 are derived from D0ARCA009 positions.
+# Position of ID 8 (TAB4) is from preliminary FUGRO survey with the depth of CTF1
+# Position of ID 9 (JB2) is from preliminary FUGRO survey
+# Position of ID10 (JB3) is from preliminary FUGRO survey
+3   +587848.700  +4016749.700  -3450.467
+7   +587198.628  +4016228.693  -3433.306
+8   +588257.896  +4017034.442  -3457.240
+9   +587646.419  +4017109.956  -3456.980
+10  +587763.722  +4017253.398  -3453.894
