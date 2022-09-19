@@ -17,10 +17,10 @@ end
 
 
 """
-    function hydrophonenabled(m::Module)
+    function hydrophonenabled(m::DetectorModule)
 
 Return `true` if the hydrophone is enabled, `false` otherwise.
 """
-function hydrophoneenabled(m::Module)
+function hydrophoneenabled(m::DetectorModule)
     !nthbitset(MODULE_STATUS.HYDROPHONE_DISABLE, m.status)
 end

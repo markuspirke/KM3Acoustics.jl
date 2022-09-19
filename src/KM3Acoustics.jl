@@ -11,7 +11,9 @@ using CSV
 using DataFrames
 
 export
-    Detector, Hydrophone, Tripod,
+    Detector, Hydrophone, Tripod, DetectorModule, PMT, Position, UTMPosition, Location,
+    hydrophoneenabled, piezoenabled,
+    Quaternion,
     read,
     read_asignal, plot_asignal, to_wav
 
