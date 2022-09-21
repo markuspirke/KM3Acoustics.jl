@@ -9,7 +9,7 @@ in a speed of 1541.0 m/s.
 The velocity changes by 17 m/s per 1000m increase in depth.
 """
 
-const dv_dz::Float64 = -17.0e-3
+const dv_dz = -17.0e-3
 
 
 struct SoundVelocity
