@@ -60,7 +60,7 @@ end
 """
     function read(filename::AbstractString, T::Type{Hydrophone})
 
-Reads a vector or `Hydrophone`s from an ASCII file.
+Reads a vector of `Hydrophone`s from an ASCII file.
 """
 function read(filename::AbstractString, T::Type{Hydrophone})
     hydrophones = T[]
@@ -76,6 +76,7 @@ function read(filename::AbstractString, T::Type{Hydrophone})
     hydrophones
 end
 
+
 """
 A tripod installed on the seabed which sends acoustic signals to modules.
 """
@@ -83,10 +84,12 @@ struct Tripod
     id::Int8
     pos::Position
 end
+
+
 """
     function read(filename:AbstractString, T::Tyoe{Tripod})
 
-Reads a vector or 'Tripod's from an ASCII file.
+Reads a vector of `Tripod`s from an ASCII file.
 """
 function read(filename::AbstractString, T::Type{Tripod})
     tripods = T[]
