@@ -5,4 +5,5 @@ using Test
     include("io.jl")
     include("tools.jl")
     include("utils.jl")
+    include("soundvelocity.jl")
 end

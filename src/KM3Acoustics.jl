@@ -15,7 +15,9 @@ export
     hydrophoneenabled, piezoenabled,
     Quaternion,
     read,
-    read_asignal, plot_asignal, to_wav
+    plot_asignal, to_wav,
+    SoundVelocity, get_velocity, get_time
+
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
     include(inc)
@@ -26,5 +28,6 @@ include("tools.jl")
 include("io.jl")
 include("utils.jl")
 include("acoustics.jl")
+include("soundvelocity.jl")
 include("acoustics_eventbuilder.jl")
 end
