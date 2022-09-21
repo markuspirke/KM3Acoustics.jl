@@ -5,7 +5,6 @@ import Base: read
 
 using StaticArrays
 using WAV
-using Plots
 
 using CSV
 using DataFrames
@@ -15,7 +14,7 @@ export
     hydrophoneenabled, piezoenabled,
     Quaternion,
     read,
-    plot_asignal, to_wav,
+    to_wav,
     SoundVelocity, get_velocity, get_time
 
 
