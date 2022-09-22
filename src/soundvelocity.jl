@@ -15,6 +15,9 @@ const dv_dz = -17.0e-3
 struct SoundVelocity
     v₀::Float64
     z::Float64
+    dv_dz::Float64
+
+    SoundVelocity(v₀, z) = new(v₀, z, dv_dz)
 end
 
 const ref_soundvelocity = SoundVelocity(1541.0, -2000.0)
@@ -25,9 +28,9 @@ const ref_soundvelocity = SoundVelocity(1541.0, -2000.0)
 
 For a given depth z, returns the speed of sound at that depth.
 """
-function get_velocity(z::Float64, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
+function velocity(z::Float64, ref::SoundVelocity=ref_soundvelocity)
 
-    v = (z - ref.z)*dv_dz + ref.v₀
+    v = (z - ref.z)*ref.dv_dz + ref.v₀
 
     SoundVelocity(v,z)
 end
@@ -37,18 +40,18 @@ end
 
 For a given tripod, returns the speed of sound at the depth of the tripod.
 """
-function get_velocity(T::Tripod, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
+function velocity(T::Tripod, ref::SoundVelocity=ref_soundvelocity)
 
-    get_velocity(T.pos.z)
+    velocity(T.pos.z)
 end
 """
     function get_velocity(T::DetectorModule, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
 
 For a given module, returns the speed of sound at the depth of the module.
 """
-function get_velocity(T::DetectorModule, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
+function velocity(T::DetectorModule, ref::SoundVelocity=ref_soundvelocity)
 
-    get_velocity(T.pos.z)
+    velocity(T.pos.z)
 end
 """
     function get_time(D::DetectorModule, T::Tripod, dv_dz=dv_dz)
@@ -56,12 +59,35 @@ end
 For a given module and tripod, returns the time it takes for the signals to travel from the
 tripod to the module.
 """
-function get_time(D::DetectorModule, T::Tripod, dv_dz=dv_dz)
-    v_D = get_velocity(D) #sound velocity at height of tripod
-    v_T = get_velocity(T) #sound veloctity at height of module
+function traveltime(D::DetectorModule, T::Tripod)
+    v_D = velocity(D) #sound velocity at height of tripod
+    v_T = velocity(T) #sound veloctity at height of module
 
     R = norm(D.pos - T.pos) #distance between tripod and module
     dz = norm(D.pos.z - T.pos.z) #difference in height
 
-    R/(dz * dv_dz) * log(v_D/v_T) #result of integration
+    if dz ≈ 0.0
+        R/v_T.v₀
+    else
+        R/(dz * v_D.dv_dz) * log(v_D.v₀/v_T.v₀) #result of integration
+    end
+end
+"""
+    function traveltime(T::Tripod, D::DetectorModule)
+
+For a given module and tripod, returns the time it takes for the signals to travel from the
+tripod to the module.
+"""
+function traveltime(T::Tripod, D::DetectorModule)
+    v_D = velocity(D) #sound velocity at height of tripod
+    v_T = velocity(T) #sound veloctity at height of module
+
+    R = norm(D.pos - T.pos) #distance between tripod and module
+    dz = norm(D.pos.z - T.pos.z) #difference in height
+
+    if dz ≈ 0.0
+        R/v_T.v₀
+    else
+        R/(dz * v_D.dv_dz) * log(v_D.v₀/v_T.v₀) #result of integration
+    end
 end

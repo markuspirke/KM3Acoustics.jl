@@ -3,6 +3,7 @@ module KM3Acoustics
 using Dates
 import Base: read
 
+using LinearAlgebra
 using StaticArrays
 using WAV
 
@@ -15,7 +16,7 @@ export
     Quaternion,
     read,
     ASignal, to_wav,
-    SoundVelocity, get_velocity, get_time
+    SoundVelocity, velocity, traveltime
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
