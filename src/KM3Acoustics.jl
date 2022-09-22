@@ -19,6 +19,7 @@ export
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
+    !endswith(inc, ".jl") && continue
     include(inc)
 end
 
