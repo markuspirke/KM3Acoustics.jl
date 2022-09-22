@@ -14,7 +14,7 @@ export
     hydrophoneenabled, piezoenabled,
     Quaternion,
     read,
-    to_wav,
+    ASignal, to_wav,
     SoundVelocity, get_velocity, get_time
 
 
