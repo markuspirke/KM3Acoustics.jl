@@ -1,4 +1,5 @@
 using KM3Acoustics
+using Test
 
 @testset "acoustics" begin
     signal = read(joinpath(SAMPLES_DIR, "DOM_808956920_CH1_1608751683.bin"), ASignal)
