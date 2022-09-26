@@ -9,6 +9,7 @@ using WAV
 
 using CSV
 using DataFrames
+import DataStructures: DefaultDict
 
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
