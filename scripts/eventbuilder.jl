@@ -1,15 +1,14 @@
 doc = """Acoustics event builder.
 
 Usage:
-  event_builder.jl [options] -t TOASHORTS -D DETX
+  event_builder.jl [options] -i INPUT_FILES_DIR -D DETX -t TOASHORTS
   event_builder.jl -h | --help
   event_builder.jl --version
 
 Options:
   -t TOASHORTS        A CSV file containing the TOAs, obtained from the KM3NeT DB (toashorts).
   -D DETX             The detector description file.
-  -H HYDROPHONEFILE   The hydrophones file with locations and positions [default: hydrophone.txt].
-  -T TRIPODFILE       The hydrophones file with locations and positions [default: tripod.txt].
+  -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt...
   -h --help           Show this screen.
   --version           Show version.
 
@@ -22,10 +21,12 @@ using KM3Acoustics
 
 function main()
     detector = Detector(args["-D"])
+
     println("Reading hydrophones")
-    hydrophones = read(args["-H"], Hydrophone)
-    tripods = read(args["-T"], Tripod)
+    hydrophones = read(joinpath(args["-i"], "hydrophone.txt"), Hydrophone)
+
     println("Reading tripods")
+    tripods = read(joinpath(args["-i"], "tripod.txt"), Tripod)
 
     # receivers = Dict{Int, Receiver}()
     # emitters = Dict{Int, Emitter}()
