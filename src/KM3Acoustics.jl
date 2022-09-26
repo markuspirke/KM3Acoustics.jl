@@ -16,7 +16,9 @@ export
     Quaternion,
     read,
     ASignal, to_wav,
-    SoundVelocity, velocity, traveltime
+    SoundVelocity, velocity, traveltime,
+    remove_idevents, Emitter, Receiver, Transmission
+
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
