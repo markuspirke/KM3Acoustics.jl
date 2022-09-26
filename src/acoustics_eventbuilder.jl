@@ -10,9 +10,8 @@ function remove_idevents(filename::AbstractString)
     df = unique(df)
 
     sort!(df, [:DOMID, :UTC_TOA])
-#    gdf = groupby(df, :EMITTERID)
+
     df
-#    gdf
 end
 """
 Receivers are either DOMs with an piezo element or a baseunit with a hydrophone.

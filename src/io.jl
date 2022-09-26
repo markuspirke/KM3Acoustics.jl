@@ -47,7 +47,6 @@ struct DetectorModule
     t₀::Union{Float64, Missing}
 end
 
-
 """
 A hydrophone, typically installed in the base module of a KM3NeT detector's
 string.
@@ -75,8 +74,6 @@ function read(filename::AbstractString, T::Type{Hydrophone})
     end
     hydrophones
 end
-
-
 """
 A tripod installed on the seabed which sends acoustic signals to modules.
 """
@@ -84,10 +81,8 @@ struct Tripod
     id::Int8
     pos::Position
 end
-
-
 """
-    function read(filename:AbstractString, T::Tyoe{Tripod})
+    function read(filename:AbstractString, T::Type{Tripod})
 
 Reads a vector of `Tripod`s from an ASCII file.
 """
@@ -104,7 +99,33 @@ function read(filename::AbstractString, T::Type{Tripod})
     end
     tripods
 end
+"""
+Waveform translates Emitter ID to Tripod ID.
+"""
+struct Waveform
+    ids::Dict{Int8, Int8}
+end
+"""
+    function read(filename::AbstractString, T::Type{Waveform})
 
+Reads the waveform ASCII file.
+"""
+function read(filename::AbstractString, T::Type{Waveform})
+
+    D = Dict{Int8, Int8}()
+    for line ∈ readlines(filename)
+        if startswith(line, "#")
+            continue
+        end
+
+        key, value = split(line)
+        key, value = parse.(Int8, [key, value])
+
+        D[key] = value
+    end
+
+    T(D)
+end
 """
 A KM3NeT detector.
 
