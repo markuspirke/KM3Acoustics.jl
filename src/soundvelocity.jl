@@ -36,41 +36,13 @@ function velocity(z::Float64, ref::SoundVelocity=ref_soundvelocity)
 end
 
 """
-    function get_velocity(T::Tripod, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
-
-For a given tripod, returns the speed of sound at the depth of the tripod.
-"""
-function velocity(T::Tripod, ref::SoundVelocity=ref_soundvelocity)
-
-    velocity(T.pos.z)
-end
-"""
     function get_velocity(T::DetectorModule, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
 
-For a given module, returns the speed of sound at the depth of the module.
+For a given module or tripod returns the speed of sound at the depth of the module or tripod.
 """
-function velocity(T::DetectorModule, ref::SoundVelocity=ref_soundvelocity)
+function velocity(T, ref::SoundVelocity=ref_soundvelocity)
 
     velocity(T.pos.z)
-end
-"""
-    function get_time(D::DetectorModule, T::Tripod, dv_dz=dv_dz)
-
-For a given module and tripod, returns the time it takes for the signals to travel from the
-tripod to the module.
-"""
-function traveltime(D::DetectorModule, T::Tripod)
-    v_D = velocity(D) #sound velocity at height of tripod
-    v_T = velocity(T) #sound veloctity at height of module
-
-    R = norm(D.pos - T.pos) #distance between tripod and module
-    dz = norm(D.pos.z - T.pos.z) #difference in height
-
-    if dz ≈ 0.0
-        R/v_T.v₀
-    else
-        R/(dz * v_D.dv_dz) * log(v_D.v₀/v_T.v₀) #result of integration
-    end
 end
 """
     function traveltime(T::Tripod, D::DetectorModule)
@@ -78,16 +50,16 @@ end
 For a given module and tripod, returns the time it takes for the signals to travel from the
 tripod to the module.
 """
-function traveltime(T::Tripod, D::DetectorModule)
-    v_D = velocity(D) #sound velocity at height of tripod
-    v_T = velocity(T) #sound veloctity at height of module
+function traveltime(A, B)
+    v_A = velocity(A) #sound velocity at height of tripod
+    v_B = velocity(B) #sound veloctity at height of module
 
-    R = norm(D.pos - T.pos) #distance between tripod and module
-    dz = norm(D.pos.z - T.pos.z) #difference in height
+    R = norm(A.pos - B.pos) #distance between tripod and module
+    dz = A.pos.z - B.pos.z #difference in height
 
     if dz ≈ 0.0
-        R/v_T.v₀
+        R/v_A.v₀
     else
-        R/(dz * v_D.dv_dz) * log(v_D.v₀/v_T.v₀) #result of integration
+        R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀) #result of integration
     end
 end
