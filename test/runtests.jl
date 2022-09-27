@@ -7,4 +7,5 @@ using Test
     include("utils.jl")
     include("acoustics.jl")
     include("soundvelocity.jl")
+    include("eventbuilder.jl")
 end

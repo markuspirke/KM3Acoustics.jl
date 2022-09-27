@@ -1,15 +1,14 @@
 module KM3Acoustics
 
 using Dates
-import Base: read
-
+import Base: read, isless
 using LinearAlgebra
 using StaticArrays
 using WAV
 
 using CSV
 using DataFrames
-import DataStructures: DefaultDict
+# import DataStructures: DefaultDict
 
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
@@ -18,7 +17,7 @@ export
     read,
     ASignal, to_wav,
     SoundVelocity, velocity, traveltime,
-    remove_idevents, Emitter, Receiver, Transmission
+    remove_idevents, Emitter, Receiver, Transmission, isless
 
 
 
@@ -33,5 +32,5 @@ include("io.jl")
 include("utils.jl")
 include("acoustics.jl")
 include("soundvelocity.jl")
-include("acoustics_eventbuilder.jl")
+include("eventbuilder.jl")
 end

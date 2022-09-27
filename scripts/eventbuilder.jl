@@ -22,6 +22,7 @@ println(Dates.format(now(), "HH:MM:SS"))
 println("using KM3Acoustics")
 using KM3Acoustics
 println(Dates.format(now(), "HH:MM:SS"))
+import DataStructures: DefaultDict
 println("import DefaultDict")
 #using DataStructures # maybe better import DataStructures: DefaultDict
 # import DataStructures: DefaultDict
@@ -69,17 +70,25 @@ function main()
     transmissions = DefaultDict{Int32, DefaultDict}(DefaultDict{Int32, Vector{Transmission}}(Vector{Float64}))
 
     for row in eachrow(toashort)
-        emitter_id = waveform[row.EMITTERID]
+        emitter_id = waveforms.ids[row.EMITTERID]
         if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
-            toe = row.UTC_TOA - traveltime(receivers[row.DOMID], emitters[row.DOM])
+            toe = row.UTC_TOA - traveltime(receivers[row.DOMID], emitters[emitter_id])
             T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, row.UTC_TOA, toe)
             push!(transmissions[emitter_id][row.DOMID], T)
         end
     end
+    println(Dates.format(now(), "HH:MM:SS"))
+    println([length(transmissions[1][808960332]), length(transmissions[2][808960332]), length(transmissions[3][808960332])])
 
+    for (emmiter_id, receivers) in transmissions
+       for (receiver_id, transmission) in receivers
+           sort!(transmission)
+           unique!(x -> x.TOA, transmission)
+        end
+    end
 
-
-
+    println([length(transmissions[1][808960332]), length(transmissions[2][808960332]), length(transmissions[3][808960332])])
+    println(Dates.format(now(), "HH:MM:SS"))
 
     # for (emitter_id,emitter) ∈ emitters
     #     d = DefaultDict{Int32, Vector{Transmission}}(Vector{Transmission})
