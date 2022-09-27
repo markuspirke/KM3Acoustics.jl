@@ -56,6 +56,13 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
         @test Position(587763.722, 4.017253398e6, -3453.894) ≈ tripods[end].pos
     end
 
+    @testset "waveform" begin
+        waveform = read(joinpath(SAMPLES_DIR, "waveform.txt"), Waveform)
+        @test 10 == length(waveform.ids)
+        @test waveform.ids[16] == 3
+        @test waveform.ids[-15] == 7
+    end
+
     @testset "utilities" begin
         mod = DetectorModule(1, missing, Location(0, 0), 0, PMT[], missing, 0, missing)
         @test hydrophoneenabled(mod)
