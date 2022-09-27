@@ -1,6 +1,8 @@
 using KM3Acoustics
 using Test
 
+const SAMPLES_DIR = joinpath(@__DIR__, "samples")
+
 @testset "acoustics" begin
     signal = read(joinpath(SAMPLES_DIR, "DOM_808956920_CH1_1608751683.bin"), ASignal)
     @test 808956920 == signal.dom_id

@@ -1,6 +1,8 @@
 using KM3Acoustics
 using Test
 
+const SAMPLES_DIR = joinpath(@__DIR__, "samples")
+
 @testset "soundvelocity" begin
     @test SoundVelocity(1541.0, -2000.0) == velocity(-2000.0)
     @test SoundVelocity(1558.0, -3000.0) == velocity(-3000.0)

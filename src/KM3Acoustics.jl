@@ -17,7 +17,7 @@ export
     read,
     ASignal, to_wav,
     SoundVelocity, velocity, traveltime,
-    remove_idevents, Emitter, Receiver, Transmission, isless
+    read_toashort, Emitter, Receiver, Transmission, isless
 
 
 
