@@ -34,7 +34,7 @@ function main()
     println(Dates.format(now(), "HH:MM:SS"))
     println("reading toashort")
     println("Reading toashort")
-    toashort = remove_idevents(args["-t"])
+    toashort = read_toashort(args["-t"])
 
     println(Dates.format(now(), "HH:MM:SS"))
     println("Reading hydrophones")
@@ -44,6 +44,8 @@ function main()
     println("Reading waveforms")
     waveforms = read(joinpath(args["-i"], "waveform.txt"), Waveform)
     println(Dates.format(now(), "HH:MM:SS"))
+    trigger = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
+    println("Reading trigger parameters")
 
 
     receivers = Dict{Int32, Receiver}()
@@ -67,38 +69,55 @@ function main()
         end
     end
 
-    transmissions = DefaultDict{Int32, DefaultDict}(DefaultDict{Int32, Vector{Transmission}}(Vector{Float64}))
+    DD = DefaultDict{Int32, DefaultDict}(DefaultDict{Int32, Vector{Transmission}}(Vector{Float64}))
 
-    for row in eachrow(toashort)
-        emitter_id = waveforms.ids[row.EMITTERID]
-        if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
-            toe = row.UTC_TOA - traveltime(receivers[row.DOMID], emitters[emitter_id])
-            T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, row.UTC_TOA, toe)
-            push!(transmissions[emitter_id][row.DOMID], T)
+    for row ∈ eachrow(toashort)
+        emitter_id = waveforms.ids[row.EMITTERID] # transform EMITTERID from toashort to tripod ID
+        if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id)) #check if DOM and Tripod is in detector
+            toe = row.UTC_TOA - traveltime(receivers[row.DOMID], emitters[emitter_id]) #calculate TOE
+            T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, row.UTC_TOA, toe) #write info in transmission
+            push!(DD[emitter_id][row.DOMID], T)
         end
     end
     println(Dates.format(now(), "HH:MM:SS"))
-    println([length(transmissions[1][808960332]), length(transmissions[2][808960332]), length(transmissions[3][808960332])])
+    println([length(DD[1][808960332]), length(DD[2][808960332]), length(DD[3][808960332])])
 
-    for (emmiter_id, receivers) in transmissions
-       for (receiver_id, transmission) in receivers
-           sort!(transmission)
-           unique!(x -> x.TOA, transmission)
+    for (emitter_id, receivers) ∈ DD #filter out similar events
+       for (receiver_id, transmissions) ∈ receivers
+           sort!(transmissions)
+           unique!(x -> x.TOA, transmissions)
+           # sort!(transmissions, by = x -> x.TOE) # at last sort the transmissions by TOE
         end
     end
 
-    println([length(transmissions[1][808960332]), length(transmissions[2][808960332]), length(transmissions[3][808960332])])
+    println([length(DD[1][808960332]), length(DD[2][808960332]), length(DD[3][808960332])])
+    println(typeof(DD[1][808960332]))
     println(Dates.format(now(), "HH:MM:SS"))
 
-    # for (emitter_id,emitter) ∈ emitters
-    #     d = DefaultDict{Int32, Vector{Transmission}}(Vector{Transmission})
-    #     for (receiver_id,receiver) in receivers
-    #         toe = traveltime(emitter,receiver)
-    #         T = Transmission()
+    events = Event[]
+    println(length(DD))
+    for (emitter_id, receivers) ∈ DD
+        transmissions_buffer = Transmission[]
+        for (receiver_id, transmissions) ∈ receivers #there is still some statistics missing
+            transmissions_buffer = vcat(transmissions_buffer, transmissions)
+        end
+        sort!(transmissions_buffer, by = x -> x.TOE)
+        buffer_length = length(transmissions_buffer)
 
-
-
-
-    
+        for (i, transmission) ∈ enumerate(transmissions_buffer)
+            j = copy(i)
+            j += 1
+            while (j <= buffer_length) && (transmissions_buffer[j].TOE - transmission.TOE <= trigger.tmax)
+                j += 1
+            end
+            k = j - i + 1 #events in time frame
+            if k >= trigger.nmin
+               push!(events, Event(detector.id, k, emitter_id, transmissions_buffer[i:j]))
+            end
+        end
+    end
+    println(length(events))
+    print(events[2])
+            
 end
 main()
