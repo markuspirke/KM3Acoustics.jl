@@ -63,6 +63,13 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
         @test waveform.ids[-15] == 7
     end
 
+    @testset "triggerparameter" begin
+        trigger = read(joinpath(SAMPLES_DIR, "acoustics_trigger_parameters.txt"), TriggerParameter)
+        @test trigger.q == 0.0
+        @test trigger.tmax == 0.004
+        @test trigger.nmin == 90
+    end
+
     @testset "utilities" begin
         mod = DetectorModule(1, missing, Location(0, 0), 0, PMT[], missing, 0, missing)
         @test hydrophoneenabled(mod)

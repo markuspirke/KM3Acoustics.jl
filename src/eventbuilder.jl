@@ -36,6 +36,17 @@ struct Transmission
     TOE::Float64
 end
 """
+An accoustic event is a collection, of a minimum number,
+of accoustic signals emmited from one tripod,
+gathered from multiple modules during a certain period of time.
+"""
+struct Event
+    oid::Int32
+    length::Int32
+    id::Int8
+    data::Vector{Transmission}
+end
+"""
     function isless(A::Transmission, B::Transmission)
 
 Compares two transmissions. Necessary for sorting transmissions in the right way: Sort first by earliest TOA

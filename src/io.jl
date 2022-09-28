@@ -127,6 +127,31 @@ function read(filename::AbstractString, T::Type{Waveform})
     T(D)
 end
 """
+Certain parameters which define an acoustic event.
+"""
+struct TriggerParameter
+    q::Float64
+    tmax::Float64
+    nmin::Int32
+end
+"""
+    function read(filename::AbstractString, T::Type{TriggerParameter})
+
+Reads the 'acoustics_trigger_parameters.txt' file.
+"""
+function read(filename::AbstractString, T::Type{TriggerParameter})
+    lines = readlines(filename)
+    q = split(split(lines[1])[end], ";")[1]
+    tmax = split(split(lines[2])[end], ";")[1]
+    nmin = split(split(lines[3])[end], ";")[1]
+
+    q = parse(Float64, q)
+    tmax = parse(Float64, tmax)
+    nmin = parse(Int32, nmin)
+
+    TriggerParameter(q, tmax, nmin)
+end
+"""
 A KM3NeT detector.
 
 """

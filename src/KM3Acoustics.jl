@@ -12,12 +12,13 @@ using DataFrames
 
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
+    TriggerParameter,
     hydrophoneenabled, piezoenabled,
     Quaternion,
     read,
     ASignal, to_wav,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Emitter, Receiver, Transmission, isless
+    read_toashort, Emitter, Receiver, Transmission, Event, isless
 
 
 
