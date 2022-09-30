@@ -8,7 +8,7 @@ function read_toashort(filename::AbstractString)
 
     transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA)
     select!(df, Not([:RUNNUMBER, :UNIXTIMEBASE, :TOA_S]))
-
+    unique!(df)
     df
 end
 """
