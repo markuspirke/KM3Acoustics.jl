@@ -59,4 +59,24 @@ function isless(A::Transmission, B::Transmission)
         return isless(A.TOA, B.TOA)
     end
 end
+"""
+    function overlap(A::Event, B::Event, tmax::Float64)
 
+Compares two events, which are already sorted by TOE, to check for overlap.
+If TOE of last signal of first event bigger than TOE of first signal of second event minus TMAX
+there is an overlap between signals.
+"""
+function overlap(A::Event, B::Event, tmax::Float64)
+    if A.data[end].TOE >= B.data[1].TOE
+        true
+    else
+        false
+    end
+end
+
+"""
+
+
+# Compares two events and merges them if they overlap.
+# """
+# function merge(A::Event, B::Event)

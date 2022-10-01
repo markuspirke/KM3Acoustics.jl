@@ -18,7 +18,7 @@ export
     read,
     ASignal, to_wav,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Emitter, Receiver, Transmission, Event, isless
+    read_toashort, Emitter, Receiver, Transmission, Event, isless, overlap
 
 
 
