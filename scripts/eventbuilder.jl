@@ -13,6 +13,8 @@ Options:
   --version           Show version.
 
 """
+using Dates
+println(Dates.format(now(), "HH:MM:SS"))
 using DocOpt
 args = docopt(doc)
 println("using KM3Acoustics")
@@ -37,6 +39,7 @@ function main()
     trigger = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
+    println(Dates.format(now(), "HH:MM:SS"))
 
     receivers = Dict{Int32, Receiver}()
     emitters = Dict{Int8, Emitter}()
@@ -58,7 +61,7 @@ function main()
     calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
 
     events = Event[]
-    build_events!(events, DD, trigger, detector)
+    build_events!(events, DD, detector.id, trigger)
 
     #     eventX = events[1]
     #     N = 1
@@ -105,21 +108,25 @@ function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
     end
 end
 
-function build_events!(events, DD, trigger, detector)
+function trigger!(events, emitter_id, transmissions, trigger, det_id)
+    L = length(transmissions)
+    for (i, transmission) ∈ enumerate(transmissions) # go through all signals
+        j = copy(i)
+        j += 1
+        while (j <= L) && (transmissions[j].TOE - transmission.TOE <= trigger.tmax)
+            j += 1 # group signal during a certain kind of time intervall
+        end
+        k = j - i + 1 #events in time frame
+        if k >= trigger.nmin #if more then 90 signal during tmax write down the event
+           push!(events, Event(det_id, k, emitter_id, transmissions[i:j]))
+        end
+    end
+end
+
+function build_events!(events, DD, det_id, trigger)
     for (emitter_id, transmissions) ∈ DD
         sort!(transmissions, by = x -> x.TOE)
-        L = length(transmissions)
-        for (i, transmission) ∈ enumerate(transmissions) # go through all signals
-            j = copy(i)
-            j += 1
-            while (j <= L) && (transmissions[j].TOE - transmission.TOE <= trigger.tmax)
-                j += 1 # group signal during a certain kind of time intervall
-            end
-            k = j - i + 1 #events in time frame
-            if k >= trigger.nmin #if more then 90 signal during tmax write down the event
-               push!(events, Event(detector.id, k, emitter_id, transmissions[i:j]))
-            end
-        end
+        trigger!(events, emitter_id, transmissions, trigger, det_id)
     end
 end
 
