@@ -6,8 +6,11 @@ Takes a toashort .csv file and adds UNIXTIMEBASE and TOA_S and removes unnecessa
 function read_toashort(filename::AbstractString)
     df = CSV.read(filename,DataFrame; delim=",", types=[Int32, Int32, Float64, Int32, Int8, Float64, Int32])
 
-    transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA)
+    transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA1)
     select!(df, Not([:RUNNUMBER, :UNIXTIMEBASE, :TOA_S]))
+    transform!(df, :UTC_TOA1 => x -> round.(x, sigdigits=16))
+    transform!(df, :UTC_TOA1_function => :UTC_TOA)
+    select!(df, Not([:UTC_TOA1, :UTC_TOA1_function]))
     unique!(df)
     df
 end
@@ -67,7 +70,7 @@ If TOE of last signal of first event bigger than TOE of first signal of second e
 there is an overlap between signals.
 """
 function overlap(A::Event, B::Event, tmax::Float64)
-    if A.data[end].TOE >= B.data[1].TOE
+    if A.data[end].TOE >= B.data[1].TOE - tmax
         true
     else
         false
@@ -79,4 +82,4 @@ end
 
 # Compares two events and merges them if they overlap.
 # """
-# function merge(A::Event, B::Event)
+#function merge(A::Event, B::Event)

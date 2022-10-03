@@ -36,7 +36,7 @@ function main()
     tripods = read(joinpath(args["-i"], "tripod.txt"), Tripod)
     println("Reading waveforms")
     waveforms = read(joinpath(args["-i"], "waveform.txt"), Waveform)
-    trigger = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
+    trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
     println(Dates.format(now(), "HH:MM:SS"))
@@ -61,7 +61,7 @@ function main()
     calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
 
     events = Event[]
-    build_events!(events, DD, detector.id, trigger)
+    build_events!(events, DD, detector.id, trigger1!, trigger_param)
 
     #     eventX = events[1]
     #     N = 1
@@ -123,10 +123,33 @@ function trigger!(events, emitter_id, transmissions, trigger, det_id)
     end
 end
 
-function build_events!(events, DD, det_id, trigger)
+function trigger1!(events, emitter_id, transmissions, trigger, det_id)
+    L = length(transmissions)
+    j = 2 # start at two to compare with event 1
+    i = 1
+    while i <= L # go through all signals
+        while (j <= L) && ((transmissions[j].TOE - transmissions[i].TOE <= trigger.tmax) || ((j - i + 1 >= trigger.nmin) && transmissions[j].TOE - transmissions[j-1].TOE <= trigger.tmax))
+            j += 1 # group signal during a certain kind of time intervall
+        end
+        k = j - i + 1 #events in time frame
+
+        if k >= trigger.nmin #if more then 90 signal during tmax write down the event
+            push!(events, Event(det_id, k, emitter_id, transmissions[i:j]))
+            i = j #set loop to event j which is the first event not involved in event ealier
+        else
+            i += 1 #if less then nmin signals start with next transmission
+        end
+    end
+end
+"""
+    function build_events!(events, DD, det_id, trigger)
+
+Sorts all transmissions from one emitter by TOE and then build events.
+"""
+function build_events!(events, DD, det_id, trigger, trigger_param)
     for (emitter_id, transmissions) ∈ DD
         sort!(transmissions, by = x -> x.TOE)
-        trigger!(events, emitter_id, transmissions, trigger, det_id)
+        trigger!(events, emitter_id, transmissions, trigger_param, det_id)
     end
 end
 
