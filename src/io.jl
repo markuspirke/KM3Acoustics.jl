@@ -204,6 +204,8 @@ function Detector(io::IO)
 
     modules = Dict{Int32, DetectorModule}()
 
+    t₀_warning = false
+
     for mod ∈ 1:n_modules
         elements = split(lines[idx])
         module_id, string, floor = map(x->parse(Int, x), elements[1:3])
@@ -240,7 +242,7 @@ function Detector(io::IO)
         if version >= 4
             if t₀ == 0.0
                 t₀ = mean([pmt.t₀ for pmt in pmts])
-                @warn "t₀ == 0 -> calculating the average PMT t₀ and using that instead"
+                t₀_warning = true
                 modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
             else
                 modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
@@ -250,6 +252,9 @@ function Detector(io::IO)
         end
 
         idx += n_pmts + 1
+    end
+    if t₀_warning
+        @warn "t₀ == 0 -> calculating the average PMT t₀ and using that instead"
     end
 
     Detector(det_id, validity, utm_position, n_modules, modules)

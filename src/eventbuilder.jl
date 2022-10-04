@@ -4,7 +4,7 @@
 Takes a toashort .csv file and adds UNIXTIMEBASE and TOA_S and removes unnecessary columns.
 """
 function read_toashort(filename::AbstractString)
-    df = rd(filename,DataFrame; delim=",", types=[Int32, Int32, Float64, Int32, Int8, Float64, Int32])
+    df = CSV.read(filename,DataFrame; delim=",", types=[Int32, Int32, Float64, Int32, Int8, Float64, Int32])
 
     transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA1)
     select!(df, Not([:RUNNUMBER, :UNIXTIMEBASE, :TOA_S]))

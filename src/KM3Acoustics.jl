@@ -7,7 +7,7 @@ using Statistics
 using StaticArrays
 using WAV
 
-import CSV: read as rd
+using CSV
 using DataFrames
 # import DataStructures: DefaultDict
 
