@@ -236,7 +236,19 @@ function Detector(io::IO)
             end
             push!(pmts, PMT(pmt_id, Position(x, y, z), Direction(dx, dy, dz), t0, pmt_status))
         end
-        modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
+
+        if version >= 4
+            if t₀ == 0.0
+                t₀ = mean([pmt.t₀ for pmt in pmts])
+                @warn "t₀ == 0 -> calculating the average PMT t₀ and using that instead"
+                modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
+            else
+                modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
+            end
+        else
+            modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
+        end
+
         idx += n_pmts + 1
     end
 

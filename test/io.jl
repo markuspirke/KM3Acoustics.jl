@@ -2,6 +2,7 @@ using Test
 
 using KM3Acoustics
 using Dates
+using Statistics
 
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
 
@@ -20,7 +21,8 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
                 @test 106.95 ≈ d.modules[808469291].pos.y  # base module
                 @test 97.3720395 ≈ d.modules[808974928].pos.z  # base module
                 @test Quaternion(1, 0, 0, 0) ≈ d.modules[808995481].q
-                @test 0.0 ≈ d.modules[808966287].t₀
+                pmts = d.modules[808992603].pmts
+                @test mean([pmt.t₀ for pmt in pmts]) ≈ d.modules[808992603].t₀
                 if version > 5
                     # module status introduced in v5
                     @test 0 == d.modules[808966287].status

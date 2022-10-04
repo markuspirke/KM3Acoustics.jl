@@ -3,6 +3,7 @@ module KM3Acoustics
 using Dates
 import Base: read, isless
 using LinearAlgebra
+using Statistics
 using StaticArrays
 using WAV
 
