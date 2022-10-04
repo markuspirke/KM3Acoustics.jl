@@ -6,7 +6,7 @@ using LinearAlgebra
 using StaticArrays
 using WAV
 
-using CSV
+import CSV: read as rd
 using DataFrames
 # import DataStructures: DefaultDict
 

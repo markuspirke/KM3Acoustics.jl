@@ -63,28 +63,23 @@ function main()
     events = Event[]
     build_events!(events, DD, detector.id, trigger1!, trigger_param)
 
-    #     eventX = events[1]
-    #     N = 1
-    #     while N <= length(events)
-    #         if event[N] != eventx
-    #             eventx = event
-    #         end
-
-    #         while N <= length(events) && match(event[N],eventX)
-    #             merge(event[N], eventX)
-    #             N += 1
-    #         end
-    #     end
-    # end
 end
+"""
+    function tripod_to_emitter!(tripods, emitters, detector)
 
+Tripods position reference gets changed, such that the position is measured from the position of the detector.
+"""
 function tripod_to_emitter!(tripods, emitters, detector)
     for tripod ∈ tripods # change position of tripods from .txt file to relative position of the detector
         emitters[tripod.id] = Emitter(tripod.id, tripod.pos - detector.pos)
     end
 end
+"""
+    function check_modules!(receivers, detector, hydrophones)
 
-function check_modules!(receivers, detector,hydrophones)
+Checks if the modules in detector have hydrophones or piezos, if they have they will be written in receiver and emitters dicts.
+"""
+function check_modules!(receivers, detector, hydrophones)
     for (module_id, mod) ∈ detector.modules # go through all modules and check whether they are base modules and have hydrophone
         if (mod.location.floor == 0 && hydrophoneenabled(mod)) || (mod.location.floor != 0 && piezoenabled(mod)) #or they are no base module and have piezo
             pos = Position(0, 0, 0)
@@ -96,7 +91,12 @@ function check_modules!(receivers, detector,hydrophones)
         end
     end
 end
+"""
+    function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
 
+Changes emitter ids from toashort to tripod ids from tripod.txt. Then checks if ids from the signals from toashorts coincide
+with ids in the detector. If they coincide the TOE is calculated and a transmission is pushed into an Dictionary.
+"""
 function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
     for row ∈ eachrow(toashort)
         emitter_id = waveforms.ids[row.EMITTERID]
@@ -107,7 +107,12 @@ function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
         end
     end
 end
+"""
+    function trigger!(events, emitter_id, transmissions, trigger, det_id)
 
+If the number of signals from one emitter during a time window tmax exceeds a preset threshold and event is triggered.
+An event is written if more than nmin signals appear during the time window.
+"""
 function trigger!(events, emitter_id, transmissions, trigger, det_id)
     L = length(transmissions)
     for (i, transmission) ∈ enumerate(transmissions) # go through all signals
@@ -123,6 +128,13 @@ function trigger!(events, emitter_id, transmissions, trigger, det_id)
     end
 end
 
+"""
+    function trigger1!(events, emitter_id, transmissions, trigger, det_id)
+
+If the number of signals from one emitter during a time window tmax exceeds a preset threshold and event is triggered.
+An event is written if more than nmin signals appear during the time window and if the time difference between additional signals is
+less than tmax these signals are also included in the event.
+"""
 function trigger1!(events, emitter_id, transmissions, trigger, det_id)
     L = length(transmissions)
     j = 2 # start at two to compare with event 1
