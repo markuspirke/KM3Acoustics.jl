@@ -42,7 +42,7 @@ function main()
 
     all_transmissions = transmissions_by_emitterid(emitters)
 
-    calculate_TOE!(all_transmissions, toashort, waveforms, receivers, emitters)
+    calculate_TOE!(all_transmissions, toashort, waveforms, receivers, emitters, detector.pos.z)
 
     events = build_events(all_transmissions, detector.id, trigger1!, trigger_param)
 
@@ -98,12 +98,12 @@ end
 Changes emitter ids from toashort to tripod ids from tripod.txt. Then checks if ids from the signals from toashorts coincide
 with ids in the detector. If they coincide the TOE is calculated and a transmission is pushed into an Dictionary.
 """
-function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
+function calculate_TOE!(DD, toashort, waveforms, receivers, emitters, det_depth)
     for row ∈ eachrow(toashort)
         emitter_id = waveforms.ids[row.EMITTERID]
         if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
             toa = row.UTC_TOA - receivers[row.DOMID].t₀ * 1e-9
-            toe = toa - traveltime(receivers[row.DOMID], emitters[emitter_id])
+            toe = toa - traveltime(receivers[row.DOMID], emitters[emitter_id], det_depth)
             T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, toa, toe)
             push!(DD[emitter_id], T)
         end
