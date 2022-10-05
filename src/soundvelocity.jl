@@ -60,6 +60,6 @@ function traveltime(A, B)
     if dz ≈ 0.0
         R/v_A.v₀
     else
-        R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀) #result of integration
+        abs(R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀)) #result of integration
     end
 end
