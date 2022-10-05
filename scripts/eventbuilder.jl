@@ -13,16 +13,9 @@ Options:
   --version           Show version.
 
 """
-using Dates
-println(Dates.format(now(), "HH:MM:SS"))
 using DocOpt
 args = docopt(doc)
-println("using KM3Acoustics")
 using KM3Acoustics
-import DataStructures: DefaultDict
-println("import DefaultDict")
-#using DataStructures # maybe better import DataStructures: DefaultDict
-# import DataStructures: DefaultDict
 
 function main()
     println("Reading detector")
@@ -39,29 +32,19 @@ function main()
     trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
-    println(Dates.format(now(), "HH:MM:SS"))
 
     receivers = Dict{Int32, Receiver}()
     emitters = Dict{Int8, Emitter}()
 
     tripod_to_emitter!(tripods, emitters, detector)
 
-    hydrophones1 = Dict{Int32, Hydrophone}()
-    for hydrophone ∈ hydrophones # makes a dictionary of hydrophones, with string number as keys
-        hydrophones1[hydrophone.location.string] = hydrophone
-    end
+    check_modules!(receivers, detector, hydrophones)
 
-    check_modules!(receivers, detector, hydrophones1)
+    all_transmissions = transmissions_by_emitterid(emitters)
 
-    DD = Dict{Int32, Vector{Transmission}}()
-    for (id, emitter) ∈ emitters
-        DD[id] = Transmission[]
-    end
+    calculate_TOE!(all_transmissions, toashort, waveforms, receivers, emitters)
 
-    calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
-
-    events = Event[]
-    build_events!(events, DD, detector.id, trigger1!, trigger_param)
+    events = build_events(all_transmissions, detector.id, trigger1!, trigger_param)
 
 end
 """
@@ -80,16 +63,34 @@ end
 Checks if the modules in detector have hydrophones or piezos, if they have they will be written in receiver and emitters dicts.
 """
 function check_modules!(receivers, detector, hydrophones)
+
+    hydrophones_map = Dict{Int32, Hydrophone}()
+    for hydrophone ∈ hydrophones # makes a dictionary of hydrophones, with string number as keys
+        hydrophones_map[hydrophone.location.string] = hydrophone
+    end
+
     for (module_id, mod) ∈ detector.modules # go through all modules and check whether they are base modules and have hydrophone
         if (mod.location.floor == 0 && hydrophoneenabled(mod)) || (mod.location.floor != 0 && piezoenabled(mod)) #or they are no base module and have piezo
             pos = Position(0, 0, 0)
             if mod.location.floor == 0 # if base module and hydrophone
-               pos += hydrophones[mod.location.string].pos # position in of hydrophone relative to T bar gets added
+               pos += hydrophones_map[mod.location.string].pos # position in of hydrophone relative to T bar gets added
             end
             pos += mod.pos
-            receivers[module_id] = Receiver(module_id, pos)
+            receivers[module_id] = Receiver(module_id, pos, mod.t₀)
         end
     end
+end
+"""
+    function transmissions_container(emitters)
+
+Sets up an dictionary with keys emitter id for all transmissions.
+"""
+function transmissions_by_emitterid(emitters)
+    d = Dict{Int32, Vector{Transmission}}()
+    for (id, emitter) ∈ emitters
+        d[id] = Transmission[]
+    end
+    d
 end
 """
     function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
@@ -101,8 +102,9 @@ function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
     for row ∈ eachrow(toashort)
         emitter_id = waveforms.ids[row.EMITTERID]
         if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
-            toe = row.UTC_TOA - traveltime(receivers[row.DOMID], emitters[emitter_id])
-            T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, row.UTC_TOA, toe)
+            toa = row.UTC_TOA - receivers[row.DOMID].t₀ * 1e-9
+            toe = toa - traveltime(receivers[row.DOMID], emitters[emitter_id])
+            T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, toa, toe)
             push!(DD[emitter_id], T)
         end
     end
@@ -158,11 +160,12 @@ end
 
 Sorts all transmissions from one emitter by TOE and then build events.
 """
-function build_events!(events, DD, det_id, trigger, trigger_param)
-    for (emitter_id, transmissions) ∈ DD
+function build_events(all_transmissions, det_id, trigger!, trigger_param)
+    events = Event[]
+    for (emitter_id, transmissions) ∈ all_transmissions
         sort!(transmissions, by = x -> x.TOE)
         trigger!(events, emitter_id, transmissions, trigger_param, det_id)
     end
+    events
 end
-
 main()

@@ -20,6 +20,7 @@ Receivers are either DOMs with an piezo element or a baseunit with a hydrophone.
 struct Receiver
     id::Int32
     pos::Position
+    t₀::Float64
 end
 """
 The tripods in the seabed are Emitters of acoustics signals.
