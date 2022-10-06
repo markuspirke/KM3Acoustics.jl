@@ -2,7 +2,6 @@ using Test
 
 using KM3Acoustics
 using Dates
-using Statistics
 
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
 
@@ -37,8 +36,7 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
             @test 30 ≈ d.modules[817287557].location.string
             @test 18 ≈ d.modules[817287557].location.floor
 
-            pmts = d.modules[808992603].pmts
-            @test mean([pmt.t₀ for pmt in pmts]) ≈ d.modules[808992603].t₀
+            @test 478392.31980645156 ≈ d.modules[808992603].t₀
         end
     end
     @testset "hydrophones" begin
