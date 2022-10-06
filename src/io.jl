@@ -243,14 +243,15 @@ function Detector(io::IO)
             if t₀ == 0.0
                 t₀ = mean([pmt.t₀ for pmt in pmts])
                 t₀_warning = true
-                modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
-            else
-                modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
             end
         else
-            modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
+            if ismissing(t₀)
+                t₀_warning = true
+                t₀ = mean([pmt.t₀ for pmt in pmts])
+            end
         end
 
+        modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
         idx += n_pmts + 1
     end
     if t₀_warning
