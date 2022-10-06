@@ -42,5 +42,7 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 0.6453759476810511 ≈ traveltime(emitter, receiver1)
     @test 0.6453759476810511 ≈ traveltime(receiver1, emitter)
 
+    @test 0.032452012674856874 ≈ traveltime(50.0, 1.0, 30.0, -2000.0)
+    @test 0.032452012674856874 ≈ traveltime(50.0, -1999.0, -1970.0)
 
 end

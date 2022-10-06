@@ -9,17 +9,18 @@ using WAV
 
 using CSV
 using DataFrames
+using HDF5
 # import DataStructures: DefaultDict
 
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
     TriggerParameter,
-    hydrophoneenabled, piezoenabled,
+    hydrophoneenabled, piezoenabled, write_compound,
     Quaternion,
     read,
     ASignal, to_wav,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Emitter, Receiver, Transmission, Event, isless, overlap
+    read_toashort, Emitter, Receiver, Transmission, Event, isless, overlap, save_events
 
 
 

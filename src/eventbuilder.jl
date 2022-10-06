@@ -88,3 +88,20 @@ end
 # Compares two events and merges them if they overlap.
 # """
 #function merge(A::Event, B::Event)
+"""
+    function save_events(events)
+
+Output events as HDF5 file.
+"""
+function save_events(events)
+    run_number = events[1].data[1].run
+    det_id = events[1].oid
+    filename = "KM3NeT_$(det_id)_$(run_number)_event.h5"
+    h5open(filename, "w") do file
+        for (i, event) in enumerate(events)
+            header = [event.oid, event.length, event.id]
+            write(file, "event$(i)/header", header)
+            write_compound(file, "event$(i)/transmissions", event.data)
+        end
+    end
+end
