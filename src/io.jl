@@ -239,16 +239,9 @@ function Detector(io::IO)
             push!(pmts, PMT(pmt_id, Position(x, y, z), Direction(dx, dy, dz), t0, pmt_status))
         end
 
-        if version >= 4
-            if t₀ == 0.0
-                t₀ = mean([pmt.t₀ for pmt in pmts])
-                t₀_warning = true
-            end
-        else
-            if ismissing(t₀)
-                t₀_warning = true
-                t₀ = mean([pmt.t₀ for pmt in pmts])
-            end
+        if ismissing(t₀) || t₀ == 0.0
+            t₀ = mean([pmt.t₀ for pmt in pmts])
+            t₀_warning = true
         end
 
         modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
