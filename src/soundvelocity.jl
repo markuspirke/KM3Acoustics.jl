@@ -56,9 +56,9 @@ function velocity(T, z_reference::Float64; ref::SoundVelocity=ref_soundvelocity)
     velocity(T.pos.z, z_reference)
 end
 """
-    function traveltime(T::Tripod, D::DetectorModule)
+    function traveltime(A, B)
 
-For a given module and tripod, returns the time it takes for the signals to travel from the
+For a given module, tripod, emitter or receiver returns the time it takes for the signals to travel from the
 tripod to the module.
 """
 function traveltime(A, B)
@@ -71,10 +71,16 @@ function traveltime(A, B)
     if dz ≈ 0.0
         R/v_A.v₀
     else
-        abs(R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀)) #result of integration
+        R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀) #result of integration
     end
 end
 
+"""
+    traveltime(A, B, z_reference::Float64)
+
+For a given module, tripod, emitter or receiver returns the time it takes for the signals to travel from the
+tripod to the module. The z positions are referenced to z_reference.
+"""
 function traveltime(A, B, z_reference::Float64)
     v_A = velocity(A, z_reference) #sound velocity at height of tripod
     v_B = velocity(B, z_reference) #sound veloctity at height of module
@@ -85,10 +91,15 @@ function traveltime(A, B, z_reference::Float64)
     if dz ≈ 0.0
         R/v_A.v₀
     else
-        abs(R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀)) #result of integration
+        R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀) #result of integration
     end
 end
+"""
+    traveltime(R::Float64, z1::Float64, z2::Float64)
 
+For a given distance between to points and their heights, returns the time for an acoustic signal
+to travel between the points.
+"""
 function traveltime(R::Float64, z1::Float64, z2::Float64)
     v_1 = velocity(z1) #sound velocity at height of tripod
     v_2 = velocity(z2) #sound veloctity at height of module
@@ -96,12 +107,18 @@ function traveltime(R::Float64, z1::Float64, z2::Float64)
     dz = z1 - z2 #difference in height
 
     if dz ≈ 0.0
-        R/v_A.v₀
+        R/v_1.v₀
     else
-        abs(R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀)) #result of integration
+        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
     end
 end
 
+"""
+    traveltime(R::Float64, z1::Float64, z2::Float64, z_reference::Float64)
+
+For a given distance between to points and their heights, returns the time for an acoustic signal
+to travel between the points. Heights are referenced to z_reference.
+"""
 function traveltime(R::Float64, z1::Float64, z2::Float64, z_reference::Float64)
 
     v_1 = velocity(z1, z_reference) #sound velocity at height of tripod
@@ -110,8 +127,48 @@ function traveltime(R::Float64, z1::Float64, z2::Float64, z_reference::Float64)
     dz = z1 - z2 #difference in height
 
     if dz ≈ 0.0
-        R/v_A.v₀
+        R/v_1.v₀
     else
-        abs(R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀)) #result of integration
+        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
+    end
+end
+"""
+    function traveltime(x::Position, y::Position)
+
+Given to Positions, returns the time for an acoustic signal to travel between positions.
+"""
+function traveltime(x::Position, y::Position)
+
+    v_1 = velocity(x.z) #sound velocity at height of tripod
+    v_2 = velocity(y.z) #sound veloctity at height of module
+
+    R = norm(x - y) #distance between tripod and module
+    dz = x.z - y.z #difference in height
+
+    if dz ≈ 0.0
+        R/v_1.v₀
+    else
+        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
+    end
+end
+
+"""
+    function traveltime(x::Position, y::Position, z_reference::Float64)
+
+Given to Positions, returns the time for an acoustic signal to travel between positions.
+Heights are referenced to z_reference.
+"""
+function traveltime(x::Position, y::Position, z_reference::Float64)
+
+    v_1 = velocity(x.z, z_reference) #sound velocity at height of tripod
+    v_2 = velocity(y.z, z_reference) #sound veloctity at height of module
+
+    R = norm(x - y) #distance between tripod and module
+    dz = x.z - y.z #difference in height
+
+    if dz ≈ 0.0
+        R/v_1.v₀
+    else
+        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
     end
 end
