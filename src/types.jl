@@ -15,7 +15,7 @@ struct Direction{T} <: FieldVector{3, T}
     y::T
     z::T
 end
-Direction(ϕ, θ) = Direction(cos(ϕ)*cos(θ), sin(ϕ)*cos(θ), sin(θ))
+Direction(ϕ, θ) = Direction(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ))
 
 struct Quaternion{T} <: FieldVector{4, T}
     q0::T

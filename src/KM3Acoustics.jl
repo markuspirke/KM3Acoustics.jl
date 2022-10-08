@@ -16,7 +16,7 @@ export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
     TriggerParameter,
     hydrophoneenabled, piezoenabled, write_compound,
-    Quaternion,
+    Quaternion, Direction,
     read,
     ASignal, to_wav,
     SoundVelocity, velocity, traveltime,
