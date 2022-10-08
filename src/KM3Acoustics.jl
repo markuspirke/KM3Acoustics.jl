@@ -5,7 +5,6 @@ import Base: read, isless
 using LinearAlgebra
 using Statistics
 using StaticArrays
-using WAV
 
 using CSV
 using DataFrames
@@ -18,7 +17,7 @@ export
     hydrophoneenabled, piezoenabled, write_compound,
     Quaternion, Direction,
     read,
-    ASignal, to_wav,
+    ASignal,
     SoundVelocity, velocity, traveltime,
     read_toashort, Emitter, Receiver, Transmission, Event, isless, overlap, save_events
 

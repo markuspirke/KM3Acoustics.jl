@@ -44,18 +44,18 @@ function read(filename::AbstractString,T::Type{ASignal}, overlap::Int=DAQ_ADF_AN
     return T(id, utc_seconds, ns_cycles, samples, pcm) #plug everthing into our data type
 end
 
-"""
-    function to_wav(signal::ASignal, path::AbstractString, f_s=f_s, gain_db=0.0)
+# """
+#     function to_wav(signal::ASignal, path::AbstractString, f_s=f_s, gain_db=0.0)
 
-The function to_wav takes our custom type ASignal as a first argument and procudes .wav file. The second argument is the path where the .wav file gets stored.
-The third argument is the sampling frequency at which the signal was recorded and with the last argument it is possible to amplify the signal.
-"""
-function to_wav(signal::ASignal, path::AbstractString, f_s=f_s, gain_db=0.0)
-    pcm = signal.pcm
+# The function to_wav takes our custom type ASignal as a first argument and procudes .wav file. The second argument is the path where the .wav file gets stored.
+# The third argument is the sampling frequency at which the signal was recorded and with the last argument it is possible to amplify the signal.
+# """
+# function to_wav(signal::ASignal, path::AbstractString, f_s=f_s, gain_db=0.0)
+#     pcm = signal.pcm
 
-    if gain_db != 0.0
-        pcm *= 10.0^(0.1 * gain_db)
-    end
+#     if gain_db != 0.0
+#         pcm *= 10.0^(0.1 * gain_db)
+#     end
 
-    wavwrite(pcm, path, Fs=floor(Int,f_s))
-end
+#     wavwrite(pcm, path, Fs=floor(Int,f_s))
+# end
