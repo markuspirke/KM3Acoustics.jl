@@ -32,6 +32,7 @@ function main()
     trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
+    run_number = toashort.RUN[1]
 
     receivers = Dict{Int32, Receiver}()
     emitters = Dict{Int8, Emitter}()
@@ -44,7 +45,7 @@ function main()
 
     calculate_TOE!(all_transmissions, toashort, waveforms, receivers, emitters, detector.pos.z)
 
-    events = build_events(all_transmissions, detector.id, trigger1!, trigger_param)
+    events = build_events(all_transmissions, detector.id, run_number, trigger1!, trigger_param)
 
 end
 """
@@ -104,7 +105,7 @@ function calculate_TOE!(DD, toashort, waveforms, receivers, emitters, det_depth)
         if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
             toa = row.UTC_TOA - receivers[row.DOMID].t₀ * 1e-9
             toe = toa - traveltime(receivers[row.DOMID], emitters[emitter_id], det_depth)
-            T = Transmission(row.RUN, row.DOMID, row.QUALITYFACTOR, toa, toe)
+            T = Transmission(row.DOMID, row.QUALITYFACTOR, toa, toe)
             push!(DD[emitter_id], T)
         end
     end
@@ -115,7 +116,7 @@ end
 If the number of signals from one emitter during a time window tmax exceeds a preset threshold and event is triggered.
 An event is written if more than nmin signals appear during the time window.
 """
-function trigger!(events, emitter_id, transmissions, trigger, det_id)
+function trigger!(events, emitter_id, transmissions, trigger, det_id, run_number)
     L = length(transmissions)
     for (i, transmission) ∈ enumerate(transmissions) # go through all signals
         j = copy(i)
@@ -125,7 +126,7 @@ function trigger!(events, emitter_id, transmissions, trigger, det_id)
         end
         k = j - i + 1 #events in time frame
         if k >= trigger.nmin #if more then 90 signal during tmax write down the event
-           push!(events, Event(det_id, k, emitter_id, transmissions[i:j]))
+           push!(events, Event(det_id, run_number, k, emitter_id, transmissions[i:j]))
         end
     end
 end
@@ -137,7 +138,7 @@ If the number of signals from one emitter during a time window tmax exceeds a pr
 An event is written if more than nmin signals appear during the time window and if the time difference between additional signals is
 less than tmax these signals are also included in the event.
 """
-function trigger1!(events, emitter_id, transmissions, trigger, det_id)
+function trigger1!(events, emitter_id, transmissions, trigger, det_id, run_number)
     L = length(transmissions)
     j = 2 # start at two to compare with event 1
     i = 1
@@ -148,7 +149,7 @@ function trigger1!(events, emitter_id, transmissions, trigger, det_id)
         k = j - i + 1 #events in time frame
 
         if k >= trigger.nmin #if more then 90 signal during tmax write down the event
-            push!(events, Event(det_id, k, emitter_id, transmissions[i:j]))
+            push!(events, Event(det_id, run_number, k, emitter_id, transmissions[i:j]))
             i = j #set loop to event j which is the first event not involved in event ealier
         else
             i += 1 #if less then nmin signals start with next transmission
@@ -160,11 +161,11 @@ end
 
 Sorts all transmissions from one emitter by TOE and then build events.
 """
-function build_events(all_transmissions, det_id, trigger!, trigger_param)
+function build_events(all_transmissions, det_id, run_number, trigger!, trigger_param)
     events = Event[]
     for (emitter_id, transmissions) ∈ all_transmissions
         sort!(transmissions, by = x -> x.TOE)
-        trigger!(events, emitter_id, transmissions, trigger_param, det_id)
+        trigger!(events, emitter_id, transmissions, trigger_param, det_id, run_number)
     end
     events
 end

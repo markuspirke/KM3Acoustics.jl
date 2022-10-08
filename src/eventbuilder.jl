@@ -33,7 +33,7 @@ end
 Datatype which has all information of one Transmission which is later needed for the fitting procedure.
 """
 struct Transmission
-    run::Int32
+    #run::Int32
     id::Int32
     Q::Float64
     TOA::Float64
@@ -46,6 +46,7 @@ gathered from multiple modules during a certain period of time.
 """
 struct Event
     oid::Int32
+    run::Int32
     length::Int32
     id::Int8
     data::Vector{Transmission}
@@ -94,7 +95,7 @@ end
 Output events as HDF5 file.
 """
 function save_events(events)
-    run_number = events[1].data[1].run
+    run_number = events[1].run
     run_number = lpad(run_number, 8, '0')
     det_id = events[1].oid
     det_id = lpad(det_id, 8, '0')
