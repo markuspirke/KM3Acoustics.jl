@@ -95,7 +95,9 @@ Output events as HDF5 file.
 """
 function save_events(events)
     run_number = events[1].data[1].run
+    run_number = lpad(run_number, 8, '0')
     det_id = events[1].oid
+    det_id = lpad(det_id, 8, '0')
     filename = "KM3NeT_$(det_id)_$(run_number)_event.h5"
     h5open(filename, "w") do file
         for (i, event) in enumerate(events)

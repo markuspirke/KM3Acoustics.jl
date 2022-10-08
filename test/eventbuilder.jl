@@ -35,4 +35,5 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     e3 = Event(1, 1, 1, [t4, t5])
     @test true == overlap(e1, e1, 0.2)
     @test false == overlap(e1, e3, 0.2)
+    @test 1 == length(e1)
 end
