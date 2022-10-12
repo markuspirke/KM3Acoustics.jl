@@ -1,5 +1,6 @@
 using KM3Acoustics
 using Test
+using HDF5
 
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
 
@@ -36,4 +37,20 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test true == overlap(e1, e1, 0.2)
     @test false == overlap(e1, e3, 0.2)
     @test 1 == length(e1)
+
+    event = Event(49, 11190, 2, 1, [t1, t2])
+    save_events([event], SAMPLES_DIR)
+
+    filename = "KM3NeT_00000049_00011190_event.h5"
+    header = h5read(joinpath(SAMPLES_DIR, filename), "event1/header")
+    @test 49 == header[1]
+    @test 2 == header[2]
+    @test 1 == header[3]
+
+    transmissions = reinterpret(Transmission, h5read(joinpath(SAMPLES_DIR, filename), "event1/transmissions"))
+    @test t1 == transmissions[1]
+    @test t2 == transmissions[2]
+
+    rm(joinpath(SAMPLES_DIR, filename))
+
 end
