@@ -14,6 +14,39 @@ function read_toashort(filename::AbstractString)
     unique!(df)
     df
 end
+
+"""
+Toashort is an input data type which stores all important information from the toashort file.
+"""
+struct Toashort
+    RUN::Int32
+    DOMID::Int32
+    EMITTERID::Int8
+    QUALITYFACTOR::Float64
+    UTC_TOA::Float64
+end
+"""
+    function read(file::HDF5.File, T::Type{Toashort}, N::Int)
+
+Takes a toashort.h5 file and calculates TOA and removes doublicate data.
+"""
+function read(file::HDF5.File, T::Type{Toashort}, N::Int)
+    toashorts = T[]
+    signals = read(file["toashort/$N"])
+
+    for signal in signals
+        toa = signal.UNIXTIMEBASE + signal.TOA_S
+        toa = round(toa, sigdigits=16)
+        push!(toashorts, Toashort(signal.RUN, signal.DOMID, signal.EMITTERID, signal.QUALITYFACTOR, toa))
+    end
+    unique!(toashorts)
+
+    toashorts
+end
+
+
+
+
 """
 Receivers are either DOMs with an piezo element or a baseunit with a hydrophone.
 """
