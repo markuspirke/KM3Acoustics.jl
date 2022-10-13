@@ -47,6 +47,8 @@ function main()
 
     events = build_events(all_transmissions, detector.id, run_number, trigger1!, trigger_param)
 
+    save_events(events, pwd())
+
 end
 """
     function tripod_to_emitter!(tripods, emitters, detector)
@@ -77,7 +79,7 @@ function check_modules!(receivers, detector, hydrophones)
                pos += hydrophones_map[mod.location.string].pos # position in of hydrophone relative to T bar gets added
             end
             pos += mod.pos
-            receivers[module_id] = Receiver(module_id, pos, mod.t₀)
+            receivers[module_id] = Receiver(module_id, pos, mod.location, mod.t₀)
         end
     end
 end
@@ -105,7 +107,7 @@ function calculate_TOE!(DD, toashort, waveforms, receivers, emitters, det_depth)
         if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
             toa = row.UTC_TOA - receivers[row.DOMID].t₀ * 1e-9
             toe = toa - traveltime(receivers[row.DOMID], emitters[emitter_id], det_depth)
-            T = Transmission(row.DOMID, row.QUALITYFACTOR, toa, toe)
+            T = Transmission(row.DOMID, receivers[row.DOMID].location.string, receivers[row.DOMID].location.floor, row.QUALITYFACTOR, toa, toe)
             push!(DD[emitter_id], T)
         end
     end
@@ -143,7 +145,7 @@ function trigger1!(events, emitter_id, transmissions, trigger, det_id, run_numbe
     j = 2 # start at two to compare with event 1
     i = 1
     while i <= L # go through all signals
-        while (j <= L) && ((transmissions[j].TOE - transmissions[i].TOE <= trigger.tmax) || ((j - i + 1 >= trigger.nmin) && transmissions[j].TOE - transmissions[j-1].TOE <= trigger.tmax))
+        while (j <= L) && (transmissions[j].TOE - transmissions[i].TOE <= trigger.tmax)
             j += 1 # group signal during a certain kind of time intervall
         end
         k = j - i + 1 #events in time frame

@@ -20,6 +20,7 @@ Receivers are either DOMs with an piezo element or a baseunit with a hydrophone.
 struct Receiver
     id::Int32
     pos::Position
+    location::Location
     t₀::Float64
 end
 """
@@ -33,8 +34,9 @@ end
 Datatype which has all information of one Transmission which is later needed for the fitting procedure.
 """
 struct Transmission
-    #run::Int32
     id::Int32
+    string::Int32
+    floor::Int8
     Q::Float64
     TOA::Float64
     TOE::Float64
