@@ -12,9 +12,9 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 2270 == df.QUALITYFACTOR[1]
     @test 1.6358893684634418e9 ≈ df.UTC_TOA[1]
 
-    A = Transmission(1, 1.0, 1.1, 0.0)
-    B = Transmission(1, 2.0, 1.1, 0.0)
-    C = Transmission(1, 1.0, 1.0, 0.0)
+    A = Transmission(1, 1, 1, 1.0, 1.1, 0.0)
+    B = Transmission(1, 1, 1,  2.0, 1.1, 0.0)
+    C = Transmission(1, 1, 1,  1.0, 1.0, 0.0)
 
     @test false == isless(A, B) # A.TOA = B.TOA, but B.Q > A.Q => B should be first
     @test true == isless(B, A)
@@ -26,11 +26,11 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test [C, B] == sort!([B, C])
     @test [C, B] == sort!([C, B])
 
-    t1 = Transmission(1, 1.0, 1.0, 1.1)
-    t2 = Transmission(1, 1.0, 1.0, 1.2)
-    t3 = Transmission(1, 1.0, 1.0, 1.25)
-    t4 = Transmission(1, 1.0, 1.0, 1.46)
-    t5 = Transmission(1, 1.0, 1.0, 1.5)
+    t1 = Transmission(1, 1, 1,  1.0, 1.0, 1.1)
+    t2 = Transmission(1, 1, 1,  1.0, 1.0, 1.2)
+    t3 = Transmission(1, 1, 1,  1.0, 1.0, 1.25)
+    t4 = Transmission(1, 1, 1,  1.0, 1.0, 1.46)
+    t5 = Transmission(1, 1, 1,  1.0, 1.0, 1.5)
     e1 = Event(1, 1, 1, 1, [t1, t2, t3])
     e2 = Event(1, 1, 1, 1, [t2, t3])
     e3 = Event(1, 1, 1, 1, [t4, t5])

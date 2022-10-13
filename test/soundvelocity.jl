@@ -42,10 +42,10 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     emitter = Emitter(1,Position(0.0,0.0,-3000.0))
     @test SoundVelocity(1558.0, -3000.0) == velocity(emitter)
 
-    receiver = Receiver(1, Position(100.0,0.0,-3000.0), 0.0)
+    receiver = Receiver(1, Position(100.0,0.0,-3000.0), Location(1,1), 0.0)
     @test SoundVelocity(1558.0, -3000.0) == velocity(receiver)
 
-    receiver1 = Receiver(1, Position(0.0,0.0,-2000.0), 0.0)
+    receiver1 = Receiver(1, Position(0.0,0.0,-2000.0), Location(1,1), 0.0)
     @test 0.06418485237483953 ≈ traveltime(emitter, receiver)
     @test 0.06418485237483953 ≈ traveltime(receiver, emitter)
     @test 0.6453759476810511 ≈ traveltime(emitter, receiver1)
