@@ -1,20 +1,31 @@
-"""
-    function read_toashort(filename::AbstractString)
+# """
+#     function read_toashort(filename::AbstractString)
 
-Takes a toashort .csv file and adds UNIXTIMEBASE and TOA_S and removes unnecessary columns.
-"""
-function read_toashort(filename::AbstractString)
-    df = CSV.read(filename,DataFrame; delim=",", types=[Int32, Int32, Float64, Int32, Int8, Float64, Int32])
+# Takes a toashort .csv file and adds UNIXTIMEBASE and TOA_S and removes unnecessary columns.
+# """
+# function read_toashort(filename::AbstractString)
+#     df = CSV.read(filename,DataFrame; delim=",", types=[Int32, Int32, Float64, Int32, Int8, Float64, Int32])
 
-    transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA1)
-    select!(df, Not([:RUNNUMBER, :UNIXTIMEBASE, :TOA_S]))
-    transform!(df, :UTC_TOA1 => x -> round.(x, sigdigits=16))
-    transform!(df, :UTC_TOA1_function => :UTC_TOA)
-    select!(df, Not([:UTC_TOA1, :UTC_TOA1_function]))
-    unique!(df)
-    df
+#     transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA1)
+#     select!(df, Not([:RUNNUMBER, :UNIXTIMEBASE, :TOA_S]))
+#     transform!(df, :UTC_TOA1 => x -> round.(x, sigdigits=16))
+#     transform!(df, :UTC_TOA1_function => :UTC_TOA)
+#     select!(df, Not([:UTC_TOA1, :UTC_TOA1_function]))
+#     unique!(df)
+#     df
+# end
+"""
+RawToaoshort is an input data type which stores all information from the toashort file.
+"""
+struct RawToashort
+    RUN::Int64
+    RUNNUMBER::Int64
+    UNIXTIMEBASE::Float64
+    DOMID::Int64
+    EMITTERID::Int64
+    TOA_S::Float64
+    QUALITYFACTOR::Int64
 end
-
 """
 Toashort is an input data type which stores all important information from the toashort file.
 """
@@ -30,23 +41,28 @@ end
 
 Takes a toashort.h5 file and calculates TOA and removes doublicate data.
 """
-function read(file::HDF5.File, T::Type{Toashort}, N::Int)
-    toashorts = T[]
-    signals = read(file["toashort/$N"])
+function read_toa(filename::AbstractString, run::Int)
+    h5open(filename) do h5f
+        read(h5f["toashort/$(run)"], RawToashort)
+    end
+end
 
-    for signal in signals
+function preprocess(raw_signals)
+    toashorts = Toashort[]
+    sizehint!(toashorts, length(raw_signals))
+    for signal in raw_signals
         toa = signal.UNIXTIMEBASE + signal.TOA_S
-        toa = round(toa, sigdigits=16)
+        #toa = round(toa, sigdigits=16)
         push!(toashorts, Toashort(signal.RUN, signal.DOMID, signal.EMITTERID, signal.QUALITYFACTOR, toa))
     end
-    unique!(toashorts)
-
+    #unique!(toashorts)
     toashorts
 end
 
-
-
-
+function read(filename::AbstractString, T::Type{Toashort}, run::Int)
+    raw_signals = read_toa(filename, run)
+    preprocess(raw_signals)
+end
 """
 Receivers are either DOMs with an piezo element or a baseunit with a hydrophone.
 """

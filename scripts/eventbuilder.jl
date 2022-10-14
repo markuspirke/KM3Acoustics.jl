@@ -21,8 +21,7 @@ function main()
     println("Reading detector")
     detector = Detector(args["-D"])
     println("Reading toashort")
-    toashort = read_toashort(args["-t"])
-
+    toashorts = read(args["-t"], Toashort, 11190)
     println("Reading hydrophones")
     hydrophones = read(joinpath(args["-i"], "hydrophone.txt"), Hydrophone)
     println("Reading tripods")
@@ -32,7 +31,7 @@ function main()
     trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
-    run_number = toashort.RUN[1]
+    run_number = toashorts[1].RUN
 
     receivers = Dict{Int32, Receiver}()
     emitters = Dict{Int8, Emitter}()
@@ -43,7 +42,7 @@ function main()
 
     all_transmissions = transmissions_by_emitterid(emitters)
 
-    calculate_TOE!(all_transmissions, toashort, waveforms, receivers, emitters, detector.pos.z)
+    calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z)
 
     events = build_events(all_transmissions, detector.id, run_number, trigger1!, trigger_param)
 
@@ -96,18 +95,18 @@ function transmissions_by_emitterid(emitters)
     d
 end
 """
-    function calculate_TOE!(DD, toashort, waveforms, receivers, emitters)
+    function calculate_TOE!(DD, toashorts, waveforms, receivers, emitters)
 
 Changes emitter ids from toashort to tripod ids from tripod.txt. Then checks if ids from the signals from toashorts coincide
 with ids in the detector. If they coincide the TOE is calculated and a transmission is pushed into an Dictionary.
 """
-function calculate_TOE!(DD, toashort, waveforms, receivers, emitters, det_depth)
-    for row ∈ eachrow(toashort)
-        emitter_id = waveforms.ids[row.EMITTERID]
-        if (haskey(receivers, row.DOMID)) && (haskey(emitters, emitter_id))
-            toa = row.UTC_TOA - receivers[row.DOMID].t₀ * 1e-9
-            toe = toa - traveltime(receivers[row.DOMID], emitters[emitter_id], det_depth)
-            T = Transmission(row.DOMID, receivers[row.DOMID].location.string, receivers[row.DOMID].location.floor, row.QUALITYFACTOR, toa, toe)
+function calculate_TOE!(DD, toashorts, waveforms, receivers, emitters, det_depth)
+    for toashort ∈ toashorts
+        emitter_id = waveforms.ids[toashort.EMITTERID]
+        if (haskey(receivers, toashort.DOMID)) && (haskey(emitters, emitter_id))
+            toa = toashort.UTC_TOA - receivers[toashort.DOMID].t₀ * 1e-9
+            toe = toa - traveltime(receivers[toashort.DOMID], emitters[emitter_id], det_depth)
+            T = Transmission(toashort.DOMID, receivers[toashort.DOMID].location.string, receivers[toashort.DOMID].location.floor, toashort.QUALITYFACTOR, toa, toe)
             push!(DD[emitter_id], T)
         end
     end
