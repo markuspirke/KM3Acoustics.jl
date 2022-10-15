@@ -5,12 +5,13 @@ using HDF5
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
 
 @testset "eventbuilder" begin
-    # df = read_toashort(joinpath(SAMPLES_DIR, "input_toashort.csv"))
-    # @test 11190 == df.RUN[1]
-    # @test 808960332 == df.DOMID[1]
-    # @test -13 == df.EMITTERID[1]
-    # @test 2270 == df.QUALITYFACTOR[1]
-    # @test 1.6358893684634418e9 ≈ df.UTC_TOA[1]
+    toashorts = read(joinpath(SAMPLES_DIR, "toashort_test.h5"), Toashort, 11190)
+    @test 11190 == toashorts[1].RUN
+    @test 808960332 == toashorts[1].DOMID
+    @test -13 == toashorts[1].EMITTERID
+    @test 2270.0 ≈ toashorts[1].QUALITYFACTOR
+    @test 2153.0 ≈ toashorts[2].QUALITYFACTOR
+    @test 1.635889368463442e9 ≈ toashorts[1].UTC_TOA
 
     A = Transmission(1, 1, 1, 1.0, 1.1, 0.0)
     B = Transmission(1, 1, 1,  2.0, 1.1, 0.0)

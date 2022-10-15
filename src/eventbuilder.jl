@@ -37,25 +37,29 @@ struct Toashort
     UTC_TOA::Float64
 end
 """
-    function read(file::HDF5.File, T::Type{Toashort}, N::Int)
+    function read_toa(filename::AbstractString, run::Int)
 
-Takes a toashort.h5 file and calculates TOA and removes doublicate data.
+Acts as a function barrier. Opens the H5 File and reads the dataset for a specific group.
 """
 function read_toa(filename::AbstractString, run::Int)
     h5open(filename) do h5f
         read(h5f["toashort/$(run)"], RawToashort)
     end
 end
+"""
+    function preprocess(raw_signals)
 
+Calculates UTC TOA and removes duplicate data.
+"""
 function preprocess(raw_signals)
     toashorts = Toashort[]
     sizehint!(toashorts, length(raw_signals))
     for signal in raw_signals
         toa = signal.UNIXTIMEBASE + signal.TOA_S
-        #toa = round(toa, sigdigits=16)
+        toa = round(toa, sigdigits=16)
         push!(toashorts, Toashort(signal.RUN, signal.DOMID, signal.EMITTERID, signal.QUALITYFACTOR, toa))
     end
-    #unique!(toashorts)
+    unique!(toashorts)
     toashorts
 end
 
