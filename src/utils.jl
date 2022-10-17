@@ -27,3 +27,23 @@ function write_compound(f, name, data::AbstractArray{T}) where T
      dset = create_dataset(f, name, dt, dataspace(data))
      write_dataset(dset, dt, data)
  end
+
+"""
+    function natural(x, y)
+
+For sorting arrays of strings, including numbers in the strings.
+Usage: x = ["Foo101", "Foo13"] -> sort(x, lt=natural) -> ["Foo13", "Foo101"]
+"""
+function natural(x, y)
+    k(x) = [occursin(r"\d+", s) ? parse(Int, s) : s
+            for s in split(replace(x, r"\d+" => s -> " $s "))]
+    A = k(x)
+    B = k(y)
+    for (a, b) in zip(A, B)
+        if !isequal(a, b)
+            return typeof(a) <: typeof(b) ? isless(a, b) :
+                   isa(a, Int) ? true : false
+        end
+    end
+    return length(A) < length(B)
+end
