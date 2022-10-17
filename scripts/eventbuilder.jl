@@ -1,7 +1,7 @@
 doc = """Acoustics event builder.
 
 Usage:
-  event_builder.jl [options]  -i INPUT_FILES_DIR -D DETX -t TOASHORTS
+  event_builder.jl [options]  -i INPUT_FILES_DIR -D DETX -t TOASHORTS -r RUNS
   event_builder.jl -h | --help
   event_builder.jl --version
 
@@ -9,19 +9,20 @@ Options:
   -t TOASHORTS        A CSV file containing the TOAs, obtained from the KM3NeT DB (toashorts).
   -D DETX             The detector description file.
   -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt, waveform.txt
+  -r RUNS             The runs to analyse, e.g. 12 or 12:17 or 12,35,57.
   -h --help           Show this screen.
   --version           Show version.
 
 """
 using DocOpt
-args = docopt(doc)
 using KM3Acoustics
 
 function main()
+    args = docopt(doc)
+    const toashorts_fname = args["-i"]
+
     println("Reading detector")
     detector = Detector(args["-D"])
-    println("Reading toashort")
-    toashorts = read(args["-t"], Toashort, 11190)
     println("Reading hydrophones")
     hydrophones = read(joinpath(args["-i"], "hydrophone.txt"), Hydrophone)
     println("Reading tripods")
@@ -31,7 +32,6 @@ function main()
     trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
-    run_number = toashorts[1].RUN
 
     receivers = Dict{Int32, Receiver}()
     emitters = Dict{Int8, Emitter}()
@@ -40,13 +40,23 @@ function main()
 
     check_modules!(receivers, detector, hydrophones)
 
-    all_transmissions = transmissions_by_emitterid(emitters)
 
-    calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z)
+    println("Reading toashort")
+    h5open(args["-t"]) do in5h
+        h5open(args["-o"], "w") do outh5
+            for run_number ∈ runrange
+                toashorts = read(args["-t"], Toashort, 11190)
+                run_number = toashorts[1].RUN
+                all_transmissions = transmissions_by_emitterid(emitters)
+                calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z)
 
-    events = build_events(all_transmissions, detector.id, run_number, trigger1!, trigger_param)
+                events = build_events(all_transmissions, detector.id, run_number, trigger1!, trigger_param)
 
-    save_events(events, pwd())
+                save_events(events, pwd())
+            end
+        end
+    end
+
 
 end
 """
