@@ -23,4 +23,6 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     mod = DetectorModule(1, missing, Location(0, 0), 0, PMT[], missing, status, missing)
     @test !piezoenabled(mod)
     @test !hydrophoneenabled(mod)
+
+    @test ["Foo13", "Foo101"] == sort(["Foo101", "Foo13"], lt=natural)
 end
