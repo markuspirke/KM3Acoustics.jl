@@ -12,7 +12,7 @@ using HDF5
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
     TriggerParameter,
-    hydrophoneenabled, piezoenabled, write_compound, natural,
+    hydrophoneenabled, piezoenabled, write_compound, natural, parse_runs,
     Quaternion, Direction,
     read,
     ASignal,

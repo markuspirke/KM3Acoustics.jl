@@ -47,3 +47,14 @@ function natural(x, y)
     end
     return length(A) < length(B)
 end
+
+function parse_runs(r)
+    if tryparse(Int, r) !== nothing
+        return parse(Int, r)
+    elseif occursin(":", r)
+        rmin, rmax = parse.(Int, split(r, ":"))
+        return rmin:rmax
+    elseif occursin(",", r)
+        rs = parse.(Int, split(r, ","))
+    end
+end
