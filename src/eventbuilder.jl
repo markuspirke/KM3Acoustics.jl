@@ -46,11 +46,6 @@ function read_toa(filename::AbstractString, run::Int)
         read(h5f["toashort/$(run)"], RawToashort)
     end
 end
-"""
-    function preprocess(raw_signals)
-
-Calculates UTC TOA and removes duplicate data.
-"""
 function preprocess(raw_signals)
     toashorts = Toashort[]
     sizehint!(toashorts, length(raw_signals))
