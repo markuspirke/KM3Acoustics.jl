@@ -5,7 +5,10 @@ using HDF5
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
 
 @testset "eventbuilder" begin
-    toashorts = read(joinpath(SAMPLES_DIR, "toashort_test.h5"), Toashort, 11190)
+    toashorts = h5open(joinpath(SAMPLES_DIR, "toashort_test.h5"), "r") do h5f
+                           read(h5f, Toashort, 11190)
+                end
+    # toashorts = read(joinpath(SAMPLES_DIR, "toashort_test.h5"), Toashort, 11190)
     @test 11190 == toashorts[1].RUN
     @test 808960332 == toashorts[1].DOMID
     @test -13 == toashorts[1].EMITTERID
@@ -40,15 +43,16 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 1 == length(e1)
 
     event = Event(49, 11190, 2, 1, [t1, t2])
-    save_events([event], SAMPLES_DIR)
-
     filename = "KM3NeT_00000049_00011190_event.h5"
-    header = h5read(joinpath(SAMPLES_DIR, filename), "event1/header")
+    h5open(joinpath(SAMPLES_DIR, filename), "w") do h5f
+        save_events([event], h5f, 11190)
+    end
+    header = h5read(joinpath(SAMPLES_DIR, filename), "/11190/event1/header")
     @test 49 == header[1]
     @test 2 == header[2]
     @test 1 == header[3]
 
-    transmissions = reinterpret(Transmission, h5read(joinpath(SAMPLES_DIR, filename), "event1/transmissions"))
+    transmissions = reinterpret(Transmission, h5read(joinpath(SAMPLES_DIR, filename), "/11190/event1/transmissions"))
     @test t1 == transmissions[1]
     @test t2 == transmissions[2]
 

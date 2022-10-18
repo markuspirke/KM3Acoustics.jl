@@ -47,7 +47,11 @@ function natural(x, y)
     end
     return length(A) < length(B)
 end
+"""
+    function parse_runs(r)
 
+Helper function to parse runs in eventbuilder script.
+"""
 function parse_runs(r)
     if tryparse(Int, r) !== nothing
         return parse(Int, r)

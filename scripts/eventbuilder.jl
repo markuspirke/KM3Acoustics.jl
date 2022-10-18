@@ -1,7 +1,7 @@
 doc = """Acoustics event builder.
 
 Usage:
-  event_builder.jl [options]  -i INPUT_FILES_DIR -D DETX -t TOASHORTS
+  event_builder.jl [options]  -i INPUT_FILES_DIR -D DETX -t TOASHORTS -r RUNS
   event_builder.jl -h | --help
   event_builder.jl --version
 
@@ -9,19 +9,20 @@ Options:
   -t TOASHORTS        A CSV file containing the TOAs, obtained from the KM3NeT DB (toashorts).
   -D DETX             The detector description file.
   -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt, waveform.txt
+  -r RUNS             The runs to analyse, e.g. 2 or 2:11 or 2,7,11.
   -h --help           Show this screen.
   --version           Show version.
 
 """
 using DocOpt
-args = docopt(doc)
 using KM3Acoustics
+using HDF5
+using ProgressMeter
 
 function main()
+    args = docopt(doc)
     println("Reading detector")
     detector = Detector(args["-D"])
-    println("Reading toashort")
-    toashorts = read(args["-t"], Toashort, 11190)
     println("Reading hydrophones")
     hydrophones = read(joinpath(args["-i"], "hydrophone.txt"), Hydrophone)
     println("Reading tripods")
@@ -31,23 +32,41 @@ function main()
     trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
 
-    run_number = toashorts[1].RUN
-
     receivers = Dict{Int32, Receiver}()
     emitters = Dict{Int8, Emitter}()
 
     tripod_to_emitter!(tripods, emitters, detector)
 
     check_modules!(receivers, detector, hydrophones)
+    h5open(args["-t"], "r") do inh5
+        ks = parse.(Int, keys(inh5["toashort"]))
+        runs = parse_runs(args["-r"])
 
-    all_transmissions = transmissions_by_emitterid(emitters)
-
-    calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z)
-
-    events = build_events(all_transmissions, detector.id, run_number, trigger1!, trigger_param)
-
-    save_events(events, pwd())
-
+        if typeof(runs) == Int
+            run_number = lpad(runs, 8, '0')
+            det_id = lpad(detector.id, 8, '0')
+            filename = "KM3NeT_$(det_id)_$(run_number)_event.h5"
+        elseif typeof(runs) == UnitRange{Int}
+            run_min = lpad(runs[1], 8, '0')
+            run_max = lpad(runs[end], 8, '0')
+            det_id = lpad(detector.id, 8, '0')
+            filename = "KM3NeT_$(det_id)_$(run_min)_$(run_max)_event.h5"
+        end
+        println("Reading toashort")
+        h5open(filename, "w") do outh5
+            @showprogress "Processing runs" for run in runs
+                if run in ks
+                    toashorts = read(inh5, Toashort, run)
+                    all_transmissions = transmissions_by_emitterid(emitters)
+                    calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z)
+                    events = build_events(all_transmissions, detector.id, run, trigger1!, trigger_param)
+                    save_events(events, outh5, run)
+                else
+                    @warn "run $(run) not in toashorts.h5"
+                end
+            end
+        end
+    end
 end
 """
     function tripod_to_emitter!(tripods, emitters, detector)

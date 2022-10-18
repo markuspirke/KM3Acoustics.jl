@@ -41,10 +41,8 @@ end
 
 Acts as a function barrier. Opens the H5 File and reads the dataset for a specific group.
 """
-function read_toa(filename::AbstractString, run::Int)
-    h5open(filename) do h5f
-        read(h5f["toashort/$(run)"], RawToashort)
-    end
+function read_toa(file::HDF5.File, run::Int)
+    read(file["toashort/$(run)"], RawToashort)
 end
 """
     function preprocess(raw_signals)
@@ -63,8 +61,8 @@ function preprocess(raw_signals)
     toashorts
 end
 
-function read(filename::AbstractString, T::Type{Toashort}, run::Int)
-    raw_signals = read_toa(filename, run)
+function read(file::HDF5.File, T::Type{Toashort}, run::Int)
+    raw_signals = read_toa(file, run)
     preprocess(raw_signals)
 end
 """
@@ -149,18 +147,10 @@ end
 
 Output events as HDF5 file.
 """
-function save_events(events, path)
-    run_number = events[1].run
-    run_number = lpad(run_number, 8, '0')
-    det_id = events[1].oid
-    det_id = lpad(det_id, 8, '0')
-    filename = "KM3NeT_$(det_id)_$(run_number)_event.h5"
-    filename = joinpath(path, filename)
-    h5open(filename, "w") do file
-        for (i, event) in enumerate(events)
-            header = [event.oid, event.length, event.id]
-            write(file, "event$(i)/header", header)
-            write_compound(file, "event$(i)/transmissions", event.data)
-        end
+function save_events(events, file, run)
+    for (i, event) in enumerate(events)
+        header = [event.oid, event.length, event.id]
+        write(file, "$(run)/event$(i)/header", header)
+        write_compound(file, "$(run)/event$(i)/transmissions", event.data)
     end
 end
