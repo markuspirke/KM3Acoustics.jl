@@ -37,6 +37,10 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
             @test 18 ≈ d.modules[817287557].location.floor
 
             @test 478392.31980645156 ≈ d.modules[808992603].t₀
+
+            @test 9 == d.strings[1]
+            @test 30 == d.strings[end]
+            @test 19 == length(d.strings)
         end
     end
     @testset "hydrophones" begin

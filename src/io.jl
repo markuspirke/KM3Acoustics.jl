@@ -161,6 +161,7 @@ struct Detector
     pos::Union{UTMPosition, Missing}
     n_modules::Int32
     modules::Dict{Int32, DetectorModule}
+    strings::Vector{Int8}
 end
 
 
@@ -206,9 +207,15 @@ function Detector(io::IO)
 
     t₀_warning = false
 
+    strings = Int8[]
+
     for mod ∈ 1:n_modules
         elements = split(lines[idx])
         module_id, string, floor = map(x->parse(Int, x), elements[1:3])
+        if !(string in strings)
+            push!(strings, string)
+        end
+
         if version >= 4
             x, y, z, q0, qx, qy, qz, t₀ = map(x->parse(Float64, x), elements[4:12])
             pos = Position(x, y, z)
@@ -251,5 +258,5 @@ function Detector(io::IO)
         @warn "t₀ == 0 -> calculating the average PMT t₀ and using that instead"
     end
 
-    Detector(det_id, validity, utm_position, n_modules, modules)
+    Detector(det_id, validity, utm_position, n_modules, modules, strings)
 end
