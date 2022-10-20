@@ -37,6 +37,15 @@ struct Toashort
     UTC_TOA::Float64
 end
 """
+    function read(file::HDF5.File, T::Type{Toashort}, run::Int)
+
+Reads a HDF5 file of toashorts.
+"""
+function read(file::HDF5.File, T::Type{Toashort}, run::Int)
+    raw_signals = read_toa(file, run)
+    preprocess(raw_signals)
+end
+"""
     function read_toa(filename::AbstractString, run::Int)
 
 Acts as a function barrier. Opens the H5 File and reads the dataset for a specific group.
@@ -61,10 +70,6 @@ function preprocess(raw_signals)
     toashorts
 end
 
-function read(file::HDF5.File, T::Type{Toashort}, run::Int)
-    raw_signals = read_toa(file, run)
-    preprocess(raw_signals)
-end
 """
 Receivers are either DOMs with an piezo element or a baseunit with a hydrophone.
 """
@@ -104,10 +109,15 @@ struct Event
     id::Int8
     data::Vector{Transmission}
 end
-"""
-
-"""
 Base.length(T::Event) = T.length
+"""
+EventHeader contains the information aboout detector, emitter, run.
+"""
+struct EventHeader
+    oid::Int32
+    length::Int32
+    id::Int8
+end
 """
     function isless(A::Transmission, B::Transmission)
 

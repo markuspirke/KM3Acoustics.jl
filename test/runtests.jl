@@ -9,4 +9,5 @@ using Test
     include("acoustics.jl")
     include("soundvelocity.jl")
     include("eventbuilder.jl")
+    include("calibration.jl")
 end

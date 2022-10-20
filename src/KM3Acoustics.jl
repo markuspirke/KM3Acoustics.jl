@@ -17,7 +17,8 @@ export
     read,
     ASignal,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Toashort, Emitter, Receiver, Transmission, Event, isless, overlap, save_events
+    read_toashort, Toashort, Emitter, Receiver, Transmission, Event, isless, overlap, save_events,
+    read_events
 
 
 
@@ -33,5 +34,6 @@ include("utils.jl")
 include("acoustics.jl")
 include("soundvelocity.jl")
 include("eventbuilder.jl")
+include("calibration.jl")
 include("geometry.jl")
 end
