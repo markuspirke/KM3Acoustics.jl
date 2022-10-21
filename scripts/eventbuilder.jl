@@ -33,9 +33,7 @@ function main()
     println("Reading trigger parameters")
 
     receivers = Dict{Int32, Receiver}()
-    emitters = Dict{Int8, Emitter}()
-
-    tripod_to_emitter!(tripods, emitters, detector)
+    emitters = tripod_to_emitter(tripods, detector)
 
     check_modules!(receivers, detector, hydrophones)
     h5open(args["-t"], "r") do inh5
@@ -66,16 +64,6 @@ function main()
                 end
             end
         end
-    end
-end
-"""
-    function tripod_to_emitter!(tripods, emitters, detector)
-
-Tripods position reference gets changed, such that the position is measured from the position of the detector.
-"""
-function tripod_to_emitter!(tripods, emitters, detector)
-    for tripod ∈ tripods # change position of tripods from .txt file to relative position of the detector
-        emitters[tripod.id] = Emitter(tripod.id, tripod.pos - detector.pos)
     end
 end
 """
