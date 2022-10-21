@@ -16,6 +16,12 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 2153.0 ≈ toashorts[2].QUALITYFACTOR
     @test 1.635889368463442e9 ≈ toashorts[1].UTC_TOA
 
+    tripods = read(joinpath(SAMPLES_DIR, "tripod.txt"), Tripod)
+    detector = Detector(joinpath(SAMPLES_DIR, "v5.detx"))
+    emitters = tripod_to_emitter(tripods, detector)
+    @test 7 == emitters[7].id
+    @test Position(-401.3719999999739, -571.3070000000298, 16.69399999999996) ≈ emitters[7].pos
+
     A = Transmission(1, 1, 1, 1.0, 1.1, 0.0)
     B = Transmission(1, 1, 1,  2.0, 1.1, 0.0)
     C = Transmission(1, 1, 1,  1.0, 1.0, 0.0)

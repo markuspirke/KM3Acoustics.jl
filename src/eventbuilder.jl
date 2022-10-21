@@ -1,19 +1,3 @@
-# """
-#     function read_toashort(filename::AbstractString)
-
-# Takes a toashort .csv file and adds UNIXTIMEBASE and TOA_S and removes unnecessary columns.
-# """
-# function read_toashort(filename::AbstractString)
-#     df = CSV.read(filename,DataFrame; delim=",", types=[Int32, Int32, Float64, Int32, Int8, Float64, Int32])
-
-#     transform!(df, AsTable([:UNIXTIMEBASE, :TOA_S]) => sum => :UTC_TOA1)
-#     select!(df, Not([:RUNNUMBER, :UNIXTIMEBASE, :TOA_S]))
-#     transform!(df, :UTC_TOA1 => x -> round.(x, sigdigits=16))
-#     transform!(df, :UTC_TOA1_function => :UTC_TOA)
-#     select!(df, Not([:UTC_TOA1, :UTC_TOA1_function]))
-#     unique!(df)
-#     df
-# end
 """
 RawToaoshort is an input data type which stores all information from the toashort file.
 """
@@ -85,6 +69,19 @@ The tripods in the seabed are Emitters of acoustics signals.
 struct Emitter
     id::Int8
     pos::Position
+end
+"""
+    function tripod_to_emitter(tripods, detector)
+
+Tripods position reference gets changed, such that the position is measured from the position of the detector.
+Returns a dictionary.
+"""
+function tripod_to_emitter(tripods, detector)
+    emitters = Dict{Int8, Emitter}()
+    for tripod ∈ tripods # change position of tripods from .txt file to relative position of the detector
+        emitters[tripod.id] = Emitter(tripod.id, tripod.pos - detector.pos)
+    end
+    emitters
 end
 """
 Datatype which has all information of one Transmission which is later needed for the fitting procedure.

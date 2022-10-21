@@ -17,7 +17,7 @@ export
     read,
     ASignal,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Toashort, Emitter, Receiver, Transmission, Event, isless, overlap, save_events,
+    read_toashort, Toashort, Emitter, tripod_to_emitter, Receiver, Transmission, Event, isless, overlap, save_events,
     read_events
 
 
