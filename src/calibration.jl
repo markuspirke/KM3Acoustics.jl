@@ -71,12 +71,29 @@ end
 
 eventtime(event::Event) =  mean([transmission.TOE for transmission in event.data])
 
-struct CalibrationEvent
-    string::Int32
-    time::Vector{Float64}
-    floor::Vector{Int8}
+
+function loss(p, events::Vector{Event}, toystring::ToyString, emitters)
+    l = length(events)
+    ps = Vector{Float64}[] # for each event a seperate loss function is calculated which needs (TOE, θ, ϕ)
+    for i in 1:l # first k entries in p are TOES, last two θ, ϕ
+        push!(ps, [p[i], p[l+1:end]...])
+    end
+    x = 0.0
+    for (i, event) in enumerate(events)
+       x += loss(ps[i], event.data, toystring, emitters[event.id])
+    end
+    x
 end
 
+function loss(p, transmissions::Vector{Transmission}, toystring::ToyString, emitter::Emitter)
+    ts = Transmission[]
+    for transmission in transmissions
+        if transmission.string == toystring.id
+            push!(ts, transmission)
+        end
+    end
+    sum([(transmission.TOA - toy_toa(p, transmission.floor, emitter, toystring))^2 for transmission in ts])
+end
 
 
 

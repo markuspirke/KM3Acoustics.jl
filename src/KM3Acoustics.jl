@@ -33,6 +33,6 @@ include("utils.jl")
 include("acoustics.jl")
 include("soundvelocity.jl")
 include("eventbuilder.jl")
-include("calibration.jl")
 include("geometry.jl")
+include("calibration.jl")
 end

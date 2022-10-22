@@ -8,7 +8,7 @@ struct ToyString
 end
 
 struct ToyModule
-    id::Int32
+    id::Int32 #why ID ???
     location::Location
     pos::Position
 end
@@ -18,7 +18,9 @@ struct ToyDetector
 end
 
 function toy_position(θ, ϕ, j, toystring) # x = [ϕ, θ], j floor
-    if j == 1
+    if j == 0
+        ToyModule(1, Location(toystring.id, j), toystring.pos)
+    elseif j == 1
         x = toystring.pos + toystring.h₀ * j * Position(sin(θ)*cos(ϕ), sin(θ)*sin(ϕ), cos(θ))
         ToyModule(1, Location(1,j), x)
     else
@@ -37,29 +39,3 @@ function toy_toa(p, j, tripod, toystring)
     toa = t + traveltime(tripod, mod, -2440.0)
 end
 
-L(p, j, x, T) = (T - toy_toa(p, j, x))^2
-
-function loss(p, d, toystring::ToyString, emitter::Emitter)
-    sum([(toa - toy_toa(p, j, emitter, toystring))^2 for (j, toa) in d])
-end
-
-function loss(p, ds, toystring::ToyString, emitters::Vector{Emitter})
-    l = length(emitters)
-    ps = Vector{Float64}[]
-
-    for i in 1:l
-        push!(ps, [p[i], p[l+1:end]...])
-    end
-
-    x = 0
-    for (i, d) in enumerate(ds)
-        x += loss(ps[i], d, toystring, emitters[i])
-    end
-    x
-end
-
-function Loss1(p, d, toystring)
-    q = p[1:3]
-    tripod = Tripod(1, Position(p[4], p[5], p[6]))
-    Loss(q, d, toystring, tripod)
-end
