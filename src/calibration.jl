@@ -40,11 +40,11 @@ end
 
 function group_events(events::Vector{Event})
     toes = eventtime.(events)
-    p = sortperm(toas)
-    toes = toas[p]
+    p = sortperm(toes)
+    toes = toes[p]
     events = events[p]
     i = 1
-    calib_events = Vector{CalibrationEvent}[]
+    calib_events = Vector{Event}[]
     while i < length(events)
         different_tripod = false
         combined_events = [events[i]]

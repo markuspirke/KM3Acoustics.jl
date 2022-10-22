@@ -19,4 +19,15 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 102 == length(events[1])
     @test 809503416 == events[1].data[1].id
     @test 308 == length(events)
+
+    gevents = group_events(events)
+    @test 13 == length(gevents)
+    @test 23 == length(gevents[1])
+    @test 49 == gevents[1][1].oid
+    @test 11190 == gevents[1][1].run
+    @test 101 == gevents[1][1].length
+    @test 3 == gevents[1][1].id
+    @test 808960332 == gevents[1][1].data[1].id
+
+    @test 1.6358896064384315e9 ≈ eventtime(events[1])
 end
