@@ -24,7 +24,7 @@ function toy_position(θ, ϕ, j, toystring) # x = [ϕ, θ], j floor
         x = toystring.pos + toystring.h₀ * j * Position(sin(θ)*cos(ϕ), sin(θ)*sin(ϕ), cos(θ))
         ToyModule(1, Location(1,j), x)
     else
-        x = toystring.pos + toystring.h * j * Position(sin(θ)*cos(ϕ), sin(θ)*sin(ϕ), cos(θ))
+        x = toystring.pos + (toystring.h * (j-1) + toystring.h₀) * Position(sin(θ)*cos(ϕ), sin(θ)*sin(ϕ), cos(θ))
         ToyModule(1, Location(1,j), x)
     end
 end
@@ -33,8 +33,6 @@ function toy_toa(p, j, tripod, toystring)
     t, ϕ, θ = p
 
     mod = toy_position(ϕ, θ, j, toystring)
-    R = norm(tripod.pos - mod.pos)
-    # V = (velocity(tripod.pos.z).v₀ + velocity(toystring.tbar.z).v₀)/2.0
 
     toa = t + traveltime(tripod, mod, -2440.0)
 end
