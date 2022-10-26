@@ -18,6 +18,7 @@ using DocOpt
 using KM3Acoustics
 using HDF5
 using ProgressMeter
+import DataStructures: DefaultDict
 
 function main()
     args = docopt(doc)
@@ -34,6 +35,7 @@ function main()
 
     receivers = Dict{Int32, Receiver}()
     emitters = tripod_to_emitter(tripods, detector)
+    emitter_aliens = DefaultDict{Int8, Int}(0)
 
     check_modules!(receivers, detector, hydrophones)
     h5open(args["-t"], "r") do inh5
@@ -56,8 +58,9 @@ function main()
                 if run in ks
                     toashorts = read(inh5, Toashort, run)
                     all_transmissions = transmissions_by_emitterid(emitters)
-                    calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z)
+                    calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z, emitter_aliens)
                     events = build_events(all_transmissions, detector.id, run, trigger1!, trigger_param)
+                    print_results(run, emitter_aliens, all_transmissions, events)
                     save_events(events, outh5, run)
                 else
                     @warn "run $(run) not in toashorts.h5"
@@ -65,6 +68,23 @@ function main()
             end
         end
     end
+end
+"""
+Summary of the eventbuilder.
+"""
+function print_results(run, emitter_aliens, all_transmissions, events)
+    for (id, transmissions) in all_transmissions
+        number_transmissions = length(transmissions)
+        println("number of transmissions in run $(run): $(id) $(number_transmissions)")
+    end
+    if length(emitter_aliens) != 0
+        @warn "unknown emitter in toashorts"
+    end
+    for (id, aliens) in emitter_aliens
+        println("number of aliens in run $(run): $(id) $(aliens)")
+    end
+    number_events = length(events)
+    println("number of events in run $(run): $(number_events)")
 end
 """
     function check_modules!(receivers, detector, hydrophones)
@@ -107,14 +127,18 @@ end
 Changes emitter ids from toashort to tripod ids from tripod.txt. Then checks if ids from the signals from toashorts coincide
 with ids in the detector. If they coincide the TOE is calculated and a transmission is pushed into an Dictionary.
 """
-function calculate_TOE!(DD, toashorts, waveforms, receivers, emitters, det_depth)
+function calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, det_depth, emitter_aliens)
     for toashort ∈ toashorts
-        emitter_id = waveforms.ids[toashort.EMITTERID]
-        if (haskey(receivers, toashort.DOMID)) && (haskey(emitters, emitter_id))
-            toa = toashort.UTC_TOA - receivers[toashort.DOMID].t₀ * 1e-9
-            toe = toa - traveltime(receivers[toashort.DOMID], emitters[emitter_id], det_depth)
-            T = Transmission(toashort.DOMID, receivers[toashort.DOMID].location.string, receivers[toashort.DOMID].location.floor, toashort.QUALITYFACTOR, toa, toe)
-            push!(DD[emitter_id], T)
+        if toashort.EMITTERID in keys(waveforms.ids)
+            emitter_id = waveforms.ids[toashort.EMITTERID]
+            if (haskey(receivers, toashort.DOMID)) && (haskey(emitters, emitter_id))
+                toa = toashort.UTC_TOA - receivers[toashort.DOMID].t₀ * 1e-9
+                toe = toa - traveltime(receivers[toashort.DOMID], emitters[emitter_id], det_depth)
+                T = Transmission(toashort.DOMID, receivers[toashort.DOMID].location.string, receivers[toashort.DOMID].location.floor, toashort.QUALITYFACTOR, toa, toe)
+                push!(all_transmissions[emitter_id], T)
+            end
+        else
+           emitter_aliens[toashort.EMITTERID] += 1
         end
     end
 end
