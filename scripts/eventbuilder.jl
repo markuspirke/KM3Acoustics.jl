@@ -83,8 +83,13 @@ function print_results(run, emitter_aliens, all_transmissions, events)
     for (id, aliens) in emitter_aliens
         println("number of aliens in run $(run): $(id) $(aliens)")
     end
-    number_events = length(events)
-    println("number of events in run $(run): $(number_events)")
+    event_counter = DefaultDict{Int8, Int}(0)
+    for event in events
+        event_counter[event.id] += 1
+    end
+    for (id, number_events) in event_counter
+        println("number of events in run $(run): $(id) $(number_events)")
+    end
 end
 """
     function check_modules!(receivers, detector, hydrophones)
