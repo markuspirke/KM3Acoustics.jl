@@ -13,29 +13,29 @@ const dv_dz = -17.0e-3
 
 
 struct SoundVelocity
-    v₀::Float64
-    z::Float64
-    dv_dz::Float64
+    v₀
+    z
+    dv_dz
 
     SoundVelocity(v₀, z) = new(v₀, z, dv_dz)
 end
 
-const ref_soundvelocity = SoundVelocity(1541.0, -2000.0)
+ref_soundvelocity = SoundVelocity(1541.0, -2000.0)
 
 
 """
-    function get_velocity(z::Float64, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
+    function get_velocity(z::T; ref_soundvelocity=ref_soundvelocity, dv_dz=dv_dz)
 
 For a given depth z, returns the speed of sound at that depth.
 """
-function velocity(z::Float64; ref::SoundVelocity=ref_soundvelocity)
+function velocity(z::T; ref=ref_soundvelocity) where {T<:Real}
 
     v = (z - ref.z)*ref.dv_dz + ref.v₀
 
     SoundVelocity(v,z)
 end
 
-function velocity(z::Float64, z_reference::Float64; ref::SoundVelocity=ref_soundvelocity)
+function velocity(z::T, z_reference; ref=ref_soundvelocity) where {T<:Real}
 
     z += z_reference
     v = (z - ref.z)*ref.dv_dz + ref.v₀
@@ -43,16 +43,14 @@ function velocity(z::Float64, z_reference::Float64; ref::SoundVelocity=ref_sound
     SoundVelocity(v,z)
 end
 """
-    function get_velocity(T::DetectorModule, ref::SoundVelocity=ref_soundvelocity, dv_dz=dv_dz)
+    function get_velocity(T::DetectorModule; ref_soundvelocity=ref_soundvelocity, dv_dz=dv_dz)
 
 For a given module or tripod returns the speed of sound at the depth of the module or tripod.
 """
-function velocity(T; ref::SoundVelocity=ref_soundvelocity)
-
+function velocity(T; ref=ref_soundvelocity)
     velocity(T.pos.z)
 end
-function velocity(T, z_reference::Float64; ref::SoundVelocity=ref_soundvelocity)
-
+function velocity(T, z_reference; ref=ref_soundvelocity)
     velocity(T.pos.z, z_reference)
 end
 """
@@ -81,7 +79,7 @@ end
 For a given module, tripod, emitter or receiver returns the time it takes for the signals to travel from the
 tripod to the module. The z positions are referenced to z_reference.
 """
-function traveltime(A, B, z_reference::Float64)
+function traveltime(A, B, z_reference)
     v_A = velocity(A, z_reference) #sound velocity at height of tripod
     v_B = velocity(B, z_reference) #sound veloctity at height of module
 
@@ -100,7 +98,7 @@ end
 For a given distance between to points and their heights, returns the time for an acoustic signal
 to travel between the points.
 """
-function traveltime(R::Float64, z1::Float64, z2::Float64)
+function traveltime(R::T, z1::T, z2::T) where {T<:Real}
     v_1 = velocity(z1) #sound velocity at height of tripod
     v_2 = velocity(z2) #sound veloctity at height of module
 
@@ -119,7 +117,7 @@ end
 For a given distance between to points and their heights, returns the time for an acoustic signal
 to travel between the points. Heights are referenced to z_reference.
 """
-function traveltime(R::Float64, z1::Float64, z2::Float64, z_reference::Float64)
+function traveltime(R, z1, z2, z_reference)
 
     v_1 = velocity(z1, z_reference) #sound velocity at height of tripod
     v_2 = velocity(z2, z_reference) #sound veloctity at height of module
@@ -158,7 +156,7 @@ end
 Given to Positions, returns the time for an acoustic signal to travel between positions.
 Heights are referenced to z_reference.
 """
-function traveltime(x::Position, y::Position, z_reference::Float64)
+function traveltime(x::Position{T}, y::Position{T}, z_reference) where {T<:Real}
 
     v_1 = velocity(x.z, z_reference) #sound velocity at height of tripod
     v_2 = velocity(y.z, z_reference) #sound veloctity at height of module
