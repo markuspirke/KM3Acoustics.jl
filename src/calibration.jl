@@ -31,7 +31,6 @@ end
 #helper functions
 _get_header(file::HDF5.File, run, event) = read(file["$(run)/$(event)/header"])
 _get_transmissions(file::HDF5.File, run, event) = read(file["$(run)/$(event)/transmissions"], Transmission)
-
 function _read_events!(events, file, run, event)
     header = _get_header(file, run, event)
     transmissions = _get_transmissions(file, run, event)
@@ -81,33 +80,237 @@ function group_events(events::Vector{Event})
     out_events
 end
 
-eventtime(event::Event) =  mean([transmission.TOE for transmission in event.data])
-
-
-function loss(p, events::Vector{Event}, toystring::ToyString, emitters)
-    l = length(events)
-    ps = Vector{Float64}[] # for each event a seperate loss function is calculated which needs (TOE, θ, ϕ)
-    for i in 1:l # first k entries in p are TOES, last two θ, ϕ
-        push!(ps, [p[i], p[l+1:end]...])
+function group_events1(events::Vector{Event})
+    toes = eventtime.(events)
+    p = sortperm(toes)
+    toes = toes[p]
+    events = events[p]
+    i = 1
+    calib_events = Vector{Event}[]
+    while i < length(events)
+        different_tripod = false
+        gevents = [events[i]]
+        j = i + 1
+        while j < length(events)
+            if toes[j] - toes[i] < 600.0 # need to check velocities of currents in deep water, but lets take 1cm per second as a start
+                push!(gevents, events[j])
+                if events[i].id != events[j].id
+                    different_tripod = true
+                end
+            else
+                break
+            end
+            j += 1
+        end
+        if different_tripod
+            push!(calib_events, gevents)
+            i = j - 1
+        end
+        i += 1
     end
+    calib_events
+end
+eventtime(event::Event) =  mean([transmission.TOE for transmission in event.data])
+"""
+    function get_basemodules(modules, hydrophones)
+
+Returns all basemodules and positions.
+"""
+function get_basemodules(modules) #maybe need to use hyrdophone.txt???
+
+    basemodules = ToyModule[]
+    for (id, mod) ∈ modules # we need all basemodules as a fixed point for our model
+        if mod.location.floor == 0
+            push!(basemodules, ToyModule(mod.location, mod.pos))
+        end
+    end
+    basemodules
+end
+
+"""
+    function init_toydetector(basemodules, modules)
+
+Initializes an detector without calibration.
+"""
+function init_toydetector(basemodules, modules)
+    strings = Dict{Int32, ToyString}()
+    for basemod ∈ basemodules
+        heights = Float64[]
+        for (id, mod) ∈ modules
+            if (mod.location.string == basemod.location.string) && mod.location.floor != 0
+                push!(heights, mod.pos.z)
+            end
+            sort!(heights)
+        end
+        heights = heights .- basemod.pos.z
+        strings[basemod.location.string] = ToyString(basemod.location.string, basemod.pos, 0.0, 0.0, heights)
+    end
+    ToyDetector(strings)
+end
+
+"""
+    function init_realdetector(basemodules, modules)
+
+Initializes an detector without calibration.
+"""
+function init_realdetector(basemodules, modules)
+    strings = Dict{Int32, RealString}()
+    for basemod ∈ basemodules
+        heights = Float64[]
+        for (id, mod) ∈ modules
+            if (mod.location.string == basemod.location.string) && mod.location.floor != 0 # if module in string and no basemodule write out heights
+                push!(heights, mod.pos.z)
+            end
+            sort!(heights)
+        end
+        heights = heights .- basemod.pos.z
+        strings[basemod.location.string] = RealString(basemod.location.string, basemod.pos, 0.0, 0.0, heights)
+    end
+    RealDetector(strings)
+end
+
+# function loss(p, events::Vector{Event}, toystring::ToyString, emitters, error)
+#     l = length(events)
+#     ps = Vector{Float64}[] # for each event a seperate loss function is calculated which needs (TOE, θ, ϕ)
+#     for i in 1:l # first k entries in p are TOES, last two θ, ϕ
+#         push!(ps, [p[i], p[l+1:end]...])
+#     end
+#     x = 0.0
+#     for (i, event) in enumerate(events)
+#        x += loss(ps[i], event.data, toystring, emitters[event.id], error)
+#     end
+#     x
+# end
+
+# function loss(p, transmissions::Vector{Transmission}, toystring::ToyString, emitter::Emitter, error)
+#     ts = Transmission[]
+#     for transmission in transmissions
+#         if transmission.string == toystring.id
+#             push!(ts, transmission)
+#         end
+#     end
+#     sum([(transmission.TOA - toy_toa(p, transmission.floor, emitter, toystring))^2/error for transmission in ts])
+# end
+
+
+struct CalibrationEvent
+    id::Int8
+    transmissions::Vector{Transmission}
+    lengths::Vector{Float64}
+end
+"""
+Stores all the information needed for toy optimization procedure.
+"""
+struct ToyStringCalibration <: Function
+    time::Float64
+    string::Int32
+    basepos::Position
+    events::Vector{CalibrationEvent}
+    toes::Vector{Float64}
+    emitters::Dict{Int8, Emitter}
+end
+"""
+Additional contructor for ToyStringCalibration.
+"""
+function ToyStringCalibration(line::ToyString, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+    toes = eventtime.(events)
+    time = mean(toes)
+    cevents = CalibrationEvent[]
+    for event in events
+        transmissions = Transmission[]
+        ls = Float64[]
+        for transmission in event.data
+            if (transmission.string == line.id) && transmission.floor != 0
+                push!(transmissions, transmission)
+                push!(ls, line.lengths[transmission.floor])
+            end
+        end
+        push!(cevents, CalibrationEvent(event.id, transmissions, ls))
+    end
+    ToyStringCalibration(time, line.id, line.pos, cevents, toes, emitters)
+end
+"""
+    function (tsc::ToyStringCalibration)(t1::T, t2::T, θ::T, ϕ::T) where {T<:Real}
+
+Function to be minimized.
+"""
+function (tsc::ToyStringCalibration)(t1::T, t2::T, θ::T, ϕ::T) where {T<:Real}
+    toes = [t1, t2]
+    # toes = p[1:end-2]
+    # dx = p[end-1]
+    # dy = p[end]
+    ts = T[] # calculated time of arrivals
+    toas = T[] # measured time of arrivals
+    for (i, cevent) in enumerate(tsc.events)
+        for (j, transmission) in enumerate(cevent.transmissions)
+            push!(toas, transmission.TOA)
+            t = toy_calc_traveltime(θ, ϕ, cevent.lengths[j], tsc.basepos, tsc.emitters[cevent.id].pos)
+            t += toes[i]
+            push!(ts, t)
+        end
+    end
+    chi2(ts, toas)
+end
+"""
+Stores all the information needed for optimization procedure.
+"""
+struct StringCalibration <: Function
+    time::Float64
+    a::Float64
+    b::Float64
+    string::Int32
+    basepos::Position
+    events::Vector{CalibrationEvent}
+    toes::Vector{Float64}
+    tripods::Dict{Int8, Emitter}
+end
+
+"""
+Additional contructor for StringCalibration.
+"""
+function StringCalibration(a::Float64, b::Float64, line::RealString, events::Vector{Event}, tripods::Dict{Int8, Emitter})
+    toes = eventtime.(events)
+    time = mean(toes)
+    cevents = CalibrationEvent[]
+    for event in events
+        transmissions = Transmission[]
+        ls = Float64[]
+        for transmission in event.data
+            if (transmission.string == line.id) && transmission.floor != 0
+                push!(transmissions, transmission)
+                push!(ls, line.lengths[transmission.floor])
+            end
+        end
+        push!(cevents, CalibrationEvent(event.id, transmissions, ls))
+    end
+    StringCalibration(time, a, b, line.id, line.pos, cevents, toes, tripods)
+end
+
+# function (sc::StringCalibration)(toes::Vector{T}, dx::T, dy::T) where {T<:Real}
+function (sc::StringCalibration)(t1::T, t2::T, dx::T, dy::T) where {T<:Real}
+    toes = [t1, t2]
+    # toes = p[1:end-2]
+    # dx = p[end-1]
+    # dy = p[end]
+    ts = T[] # calculated time of arrivals
+    toas = T[] # measured time of arrivals
+    for (i, cevent) in enumerate(sc.events)
+        for (j, transmission) in enumerate(cevent.transmissions)
+            push!(toas, transmission.TOA)
+            t = calc_traveltime(dx, dy, cevent.lengths[j], sc.a, sc. b, sc.basepos, sc.tripods[cevent.id].pos)
+            t += toes[i]
+            push!(ts, t)
+        end
+    end
+    chi2(ts, toas)
+end
+
+function chi2(toas, toas_measured; error=1.3e-6)
     x = 0.0
-    for (i, event) in enumerate(events)
-       x += loss(ps[i], event.data, toystring, emitters[event.id])
+    for (i, toa) ∈ enumerate(toas)
+        x += (toa - toas_measured[i])^2/error
     end
     x
 end
-
-function loss(p, transmissions::Vector{Transmission}, toystring::ToyString, emitter::Emitter)
-    ts = Transmission[]
-    for transmission in transmissions
-        if transmission.string == toystring.id
-            push!(ts, transmission)
-        end
-    end
-    sum([(transmission.TOA - toy_toa(p, transmission.floor, emitter, toystring))^2 for transmission in ts])
-end
-
-
-
 
 #function trigger()

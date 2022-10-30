@@ -19,7 +19,8 @@ export
     ASignal,
     SoundVelocity, velocity, traveltime,
     read_toashort, Toashort, Emitter, tripod_to_emitter, Receiver, Transmission, Event, isless, overlap, save_events,
-    read_events, group_events, eventtime,
+    read_events, group_events, eventtime, get_basemodules, ToyStringCalibration, StringCalibration,
+    init_toydetector, init_realdetector,
     ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime, string_length, string_inverselength, calc_pos, calc_traveltime
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)

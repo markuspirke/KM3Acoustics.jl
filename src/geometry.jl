@@ -5,10 +5,12 @@ struct ToyString
     ϕ::Float64 # azimuthal angle
     lengths::Vector{Float64} # height of floors or length of the string measured from base
 end
+
 struct ToyModule
     location::Location
     pos::Position
 end
+
 struct RealString
     id::Int32
     pos::Position
@@ -55,9 +57,13 @@ from the basemodule to the module.
 function string_length(dx, dy, z, a, b)
     sqrt(1 + (dx^2 + dy^2)) * z + 0.5*(dx^2 + dy^2) * b*log(1 - a*z)
 end
+"""
+    function string_inverselength(dx, dy, l, a, b)
 
+Given the length of the string up to the module, returns the height of the module.
+"""
 function string_inverselength(dx, dy, l, a, b)
-    z = find_zero(x -> string_length(dx, dy, x, a, b) - l, l)
+    find_zero(x -> string_length(dx, dy, x, a, b) - l, l)
 end
 
 function string_inverselength1(dx, dy, l, a, b)
