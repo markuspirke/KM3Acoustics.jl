@@ -20,7 +20,7 @@ export
     SoundVelocity, velocity, traveltime,
     read_toashort, Toashort, Emitter, tripod_to_emitter, Receiver, Transmission, Event, isless, overlap, save_events,
     read_events, group_events, eventtime,
-    ToyString, ToyModule, ToyDetector, toy_position, toy_toa, loss
+    ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime, string_length, string_inverselength, calc_pos, calc_traveltime
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
     !endswith(inc, ".jl") && continue
