@@ -46,6 +46,10 @@ struct DetectorModule
     status::Union{Int32, Missing}
     t₀::Union{Float64, Missing}
 end
+function Base.show(io::IO, m::DetectorModule)
+    info = m.location.floor == 0 ? "base" : "optical, $(m.n_pmts) PMTs"
+    print(io, "Detectormodule ($(info)) on string $(m.location.string) floor $(m.location.floor)")
+end
 
 """
 A hydrophone, typically installed in the base module of a KM3NeT detector's
@@ -163,6 +167,17 @@ struct Detector
     modules::Dict{Int32, DetectorModule}
     strings::Vector{Int8}
 end
+Base.show(io::IO, d::Detector) = print(io, "Detector with $(length(d.strings)) strings and $(d.n_modules) modules.")
+Base.length(d::Detector) = d.n_modules
+Base.eltype(::Type{Detector}) = DetectorModule
+function Base.iterate(d::Detector, state=(DetectorModule[], 1))
+    module_ids, count = state
+    count > d.n_modules && return nothing
+    if count == 1
+        module_ids = collect(keys(d.modules))
+    end
+    (d.modules[module_ids[count]], (module_ids, count + 1))
+end
 
 
 """
@@ -255,7 +270,7 @@ function Detector(io::IO)
         idx += n_pmts + 1
     end
     if t₀_warning
-        @warn "t₀ == 0 -> calculating the average PMT t₀ and using that instead"
+        @warn "t₀ == 0 (for DOMs) -> using the average PMT t₀s instead."
     end
 
     Detector(det_id, validity, utm_position, n_modules, modules, strings)
