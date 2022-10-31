@@ -20,6 +20,7 @@ DataStructures = "0.18"
 DocOpt = "0.4"
 HDF5 = "0.16"
 Optim = "1"
+ProgressMeter = "1"
 StaticArrays = "1"
 julia = "1"
 
