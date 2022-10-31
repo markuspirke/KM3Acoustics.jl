@@ -251,6 +251,26 @@ function (tsc::ToyStringCalibration)(t1::T, t2::T, θ::T, ϕ::T) where {T<:Real}
     end
     chi2(ts, toas)
 end
+struct ToyDetectorCalibration <: Function
+    tscs::Vector{ToyStringCalibration}
+end
+function ToyDetectorCalibration(detector::ToyDetector, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+    strings = ToyStringCalibration[]
+    for (id, string) in detector.strings
+        push!(strings, ToyStringCalibration(string, events, emitters))
+    end
+    ToyDetectorCalibration(strings)
+end
+function (tdc::ToyDetectorCalibration)(t1::T, t2::T, αs::Vararg{T}) where {T}
+    l = length(αs)
+    θs = [αs[i] for i in 1:l/2]
+    ϕs = [αs[i] for i in l/2+1:l]
+    chi2 = 0.0
+    for (i, tsc) in enumerate(tdc.tscs)
+        chi2 += tsc(t1, t2, θs[i], ϕs[i])
+    end
+    chi2
+end
 """
 Stores all the information needed for optimization procedure.
 """
