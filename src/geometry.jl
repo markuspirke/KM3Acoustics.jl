@@ -62,19 +62,20 @@ end
 
 Given the length of the string up to the module, returns the height of the module.
 """
-function string_inverselength(dx, dy, l, a, b)
-    find_zero(x -> string_length(dx, dy, x, a, b) - l, l)
+
+function string_inverselength(dx, dy, l, a, b; n_iter=20, ϵ=1e-6)
+    z = l
+    d2 = 0.5*(dx^2 + dy^2)
+    for i in 1:n_iter
+        l_new = string_length(dx, dy, z, a, b)
+        if abs(l - l_new) < ϵ
+            break
+        end
+        z -= (l_new - l) / (1.0 + d2*(1.0 - a*b/(1.0 - a*z)))
+    end
+    z
 end
 
-function string_inverselength1(dx, dy, l, a, b)
-    fx = ZeroProblem(x -> string_length(dx, dy, x, a, b) - l, l)
-    solve(fx)
-end
-
-# function string_inverselength2(dx, dy, l, a, b)
-#     probN = NonlinearProblem{false}(x -> string_length(dx, dy, x, a, b) - l, l)
-#     solver = solve(probN, NewtonRaphson(), tol=1e-6)
-# end
 """
     function calc_traveltime(dx, dy, l, a, b, basepos, emitterpos)
 
