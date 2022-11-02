@@ -8,7 +8,6 @@ using StaticArrays
 
 using HDF5
 import DataStructures: DefaultDict
-using Roots
 
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
