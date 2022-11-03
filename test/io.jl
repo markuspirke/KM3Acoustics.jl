@@ -12,10 +12,21 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
             d = Detector(joinpath(SAMPLES_DIR, "v$(version).detx"))
             if version < 4
                 # no base modules in DETX
+                @test 342 == length(d)
                 @test 342 == length(d.modules)
-            else
-                # base module attributes
-                @test 361 == length(d.modules)
+                @test DetectorModule == eltype(d)
+                mods = DetectorModule[]
+                for mod in d
+                    push!(mods, mod)
+                end
+                @test 342 == length(mods) else # base module attributes @test 361 == length(d.modules)
+                @test 361 == length(d)
+                @test DetectorModule == eltype(d)
+                mods = DetectorModule[]
+                for mod in d
+                    push!(mods, mod)
+                end
+                @test 361 == length(mods)
                 @test 116.600007 ≈ d.modules[808992603].pos.x  # optical module
                 @test 106.95 ≈ d.modules[808469291].pos.y  # base module
                 @test 97.3720395 ≈ d.modules[808974928].pos.z  # base module
