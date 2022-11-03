@@ -10,6 +10,7 @@ Options:
   -D DETX             The detector description file.
   -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt, waveform.txt
   -r RUNS             The runs to analyse, e.g. 2 or 2:11 or 2,7,11.
+  -b CHECK_BASE       Either 1 or 0. If set to 1, checks whether there were basemodules in some event.
   -h --help           Show this screen.
   --version           Show version.
 
@@ -32,6 +33,11 @@ function main()
     waveforms = read(joinpath(args["-i"], "waveform.txt"), Waveform)
     trigger_param = read(joinpath(args["-i"], "acoustics_trigger_parameters.txt"), TriggerParameter)
     println("Reading trigger parameters")
+
+    check_basemodules = false
+    if args["-b"] == "1"
+        check_basemodules = true
+    end
 
     receivers = Dict{Int32, Receiver}()
     emitters = tripod_to_emitter(tripods, detector)
@@ -60,7 +66,7 @@ function main()
                     all_transmissions = transmissions_by_emitterid(emitters)
                     calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emitters, detector.pos.z, emitter_aliens)
                     events = build_events(all_transmissions, detector.id, run, trigger1!, trigger_param)
-                    print_results(run, emitter_aliens, all_transmissions, events)
+                    print_results(run, emitter_aliens, all_transmissions, events, check_basemodules)
                     save_events(events, outh5, run)
                 else
                     @warn "run $(run) not in toashorts.h5"
@@ -72,7 +78,7 @@ end
 """
 Summary of the eventbuilder.
 """
-function print_results(run, emitter_aliens, all_transmissions, events)
+function print_results(run, emitter_aliens, all_transmissions, events, check_basemodules)
     for (id, transmissions) in all_transmissions
         number_transmissions = length(transmissions)
         println("number of transmissions in run $(run): $(id) $(number_transmissions)")
@@ -87,6 +93,25 @@ function print_results(run, emitter_aliens, all_transmissions, events)
     for event in events
         event_counter[event.id] += 1
     end
+    if check_basemodules
+        N_basemodules = 0
+        for event in events
+            n_basemodules = 0
+            for transmission in event.data
+                if transmission.floor == 0
+                    n_basemodules += 1
+                end
+            end
+            if n_basemodules > 0
+                N_basemodules += 1
+                println("number of basemodules involved in event in run $(run): $(n_basemodules)")
+            end
+        end
+        if N_basemodules == 0
+           @warn "no basemodules involved in any event in run $(run)"
+        end
+    end
+
     for (id, number_events) in event_counter
         println("number of events in run $(run): $(id) $(number_events)")
     end
