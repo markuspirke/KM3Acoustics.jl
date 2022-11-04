@@ -44,11 +44,11 @@ function main()
     emitter_aliens = DefaultDict{Int8, Int}(0)
 
     check_modules!(receivers, detector, hydrophones)
-    h5open(args["-t"], "r") do inh5
-        ks = parse.(Int, keys(inh5["toashort"]))
-        runs = parse_runs(args["-r"])
+    h5open(args["-t"], "r") do inh5 #open toashorts.h5
+        ks = parse.(Int, keys(inh5["toashort"])) # ks all RUNs which are in toashorts.h5
+        runs = parse_runs(args["-r"]) # RUNs we want to process
 
-        if typeof(runs) == Int
+        if typeof(runs) == Int # for output filename
             run_number = lpad(runs, 8, '0')
             det_id = lpad(detector.id, 8, '0')
             filename = "KM3NeT_$(det_id)_$(run_number)_event.h5"
@@ -75,47 +75,7 @@ function main()
         end
     end
 end
-"""
-Summary of the eventbuilder.
-"""
-function print_results(run, emitter_aliens, all_transmissions, events, check_basemodules)
-    for (id, transmissions) in all_transmissions
-        number_transmissions = length(transmissions)
-        println("number of transmissions in run $(run): $(id) $(number_transmissions)")
-    end
-    if length(emitter_aliens) != 0
-        @warn "unknown emitter in toashorts"
-    end
-    for (id, aliens) in emitter_aliens
-        println("number of aliens in run $(run): $(id) $(aliens)")
-    end
-    event_counter = DefaultDict{Int8, Int}(0)
-    for event in events
-        event_counter[event.id] += 1
-    end
-    if check_basemodules
-        N_basemodules = 0
-        for event in events
-            n_basemodules = 0
-            for transmission in event.data
-                if transmission.floor == 0
-                    n_basemodules += 1
-                end
-            end
-            if n_basemodules > 0
-                N_basemodules += 1
-                println("number of basemodules involved in event in run $(run): $(n_basemodules)")
-            end
-        end
-        if N_basemodules == 0
-           @warn "no basemodules involved in any event in run $(run)"
-        end
-    end
 
-    for (id, number_events) in event_counter
-        println("number of events in run $(run): $(id) $(number_events)")
-    end
-end
 """
     function check_modules!(receivers, detector, hydrophones)
 
@@ -132,7 +92,11 @@ function check_modules!(receivers, detector, hydrophones)
         if (mod.location.floor == 0 && hydrophoneenabled(mod)) || (mod.location.floor != 0 && piezoenabled(mod)) #or they are no base module and have piezo
             pos = Position(0, 0, 0)
             if mod.location.floor == 0 # if base module and hydrophone
-               pos += hydrophones_map[mod.location.string].pos # position in of hydrophone relative to T bar gets added
+                if mod.location.string in keys(hydrophones_map)
+                    pos += hydrophones_map[mod.location.string].pos # position in of hydrophone relative to T bar gets added
+                else
+                    @warn "no hydrophone for string $(mod.location.string)"
+                end
             end
             pos += mod.pos
             receivers[module_id] = Receiver(module_id, pos, mod.location, mod.t₀)
@@ -162,7 +126,7 @@ function calculate_TOE!(all_transmissions, toashorts, waveforms, receivers, emit
         if toashort.EMITTERID in keys(waveforms.ids)
             emitter_id = waveforms.ids[toashort.EMITTERID]
             if (haskey(receivers, toashort.DOMID)) && (haskey(emitters, emitter_id))
-                toa = toashort.UTC_TOA - receivers[toashort.DOMID].t₀ * 1e-9
+                toa = toashort.UTC_TOA - receivers[toashort.DOMID].t₀ * 1e-9 #correct TOA for phase, but whats with Hydrophone???
                 toe = toa - traveltime(receivers[toashort.DOMID], emitters[emitter_id], det_depth)
                 T = Transmission(toashort.DOMID, receivers[toashort.DOMID].location.string, receivers[toashort.DOMID].location.floor, toashort.QUALITYFACTOR, toa, toe)
                 push!(all_transmissions[emitter_id], T)
@@ -230,5 +194,46 @@ function build_events(all_transmissions, det_id, run_number, trigger!, trigger_p
         trigger!(events, emitter_id, transmissions, trigger_param, det_id, run_number)
     end
     events
+end
+"""
+Summary of the eventbuilder.
+"""
+function print_results(run, emitter_aliens, all_transmissions, events, check_basemodules)
+    for (id, transmissions) in all_transmissions
+        number_transmissions = length(transmissions)
+        println("number of transmissions in run $(run): $(id) $(number_transmissions)")
+    end
+    if length(emitter_aliens) != 0
+        @warn "unknown emitter in toashorts"
+    end
+    for (id, aliens) in emitter_aliens
+        println("number of aliens in run $(run): $(id) $(aliens)")
+    end
+    event_counter = DefaultDict{Int8, Int}(0)
+    for event in events
+        event_counter[event.id] += 1
+    end
+    if check_basemodules
+        N_basemodules = 0
+        for event in events
+            n_basemodules = 0
+            for transmission in event.data
+                if transmission.floor == 0
+                    n_basemodules += 1
+                end
+            end
+            if n_basemodules > 0
+                N_basemodules += 1
+                println("number of basemodules involved in event in run $(run): $(n_basemodules)")
+            end
+        end
+        if N_basemodules == 0
+           @warn "no basemodules involved in any event in run $(run)"
+        end
+    end
+
+    for (id, number_events) in event_counter
+        println("number of events in run $(run): $(id) $(number_events)")
+    end
 end
 main()
