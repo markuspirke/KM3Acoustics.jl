@@ -325,7 +325,7 @@ function (sc::StringCalibration)(t1::T, t2::T, dx::T, dy::T) where {T<:Real}
     chi2(ts, toas)
 end
 
-function chi2(toas, toas_measured; error=1.3e-6)
+function chi2(toas, toas_measured; error=50e-6)
     x = 0.0
     for (i, toa) ∈ enumerate(toas)
         x += (toa - toas_measured[i])^2/error
