@@ -5,9 +5,9 @@ import Base: read, isless
 using LinearAlgebra
 using Statistics
 using StaticArrays
-
 using HDF5
 import DataStructures: DefaultDict
+import OrderedCollections: OrderedDict
 
 export
     Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
@@ -18,9 +18,11 @@ export
     ASignal,
     SoundVelocity, velocity, traveltime,
     read_toashort, Toashort, Emitter, tripod_to_emitter, Receiver, Transmission, Event, isless, overlap, save_events,
-    read_events, group_events, eventtime, get_basemodules, ToyStringCalibration, StringCalibration,
+    read_events, group_events, eventtime, get_basemodules, ToyStringCalibration, StringCalibration, chi2,
     init_toydetector, init_realdetector,
-    ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime, string_length, string_inverselength, calc_pos, calc_traveltime
+    ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime, string_length, string_inverselength, calc_pos, calc_traveltime,
+    get_hydrophones, Precalibration, precalibration_startvalues, get_opt_emitters
+
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
     !endswith(inc, ".jl") && continue
@@ -36,4 +38,5 @@ include("soundvelocity.jl")
 include("eventbuilder.jl")
 include("geometry.jl")
 include("calibration.jl")
+include("precalibration.jl")
 end

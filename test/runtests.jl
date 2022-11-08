@@ -11,4 +11,5 @@ using Test
     include("eventbuilder.jl")
     include("geometry.jl")
     include("calibration.jl")
+    include("precalibration.jl")
 end
