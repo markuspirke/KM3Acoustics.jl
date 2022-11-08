@@ -16,6 +16,14 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 2153.0 ≈ toashorts[2].QUALITYFACTOR
     @test 1.635889368463442e9 ≈ toashorts[1].UTC_TOA
 
+    toashorts = read(joinpath(SAMPLES_DIR, "toashort_test.h5"), Toashort, 11190)
+    @test 11190 == toashorts[1].RUN
+    @test 808960332 == toashorts[1].DOMID
+    @test -13 == toashorts[1].EMITTERID
+    @test 2270.0 ≈ toashorts[1].QUALITYFACTOR
+    @test 2153.0 ≈ toashorts[2].QUALITYFACTOR
+    @test 1.635889368463442e9 ≈ toashorts[1].UTC_TOA
+
     tripods = read(joinpath(SAMPLES_DIR, "tripod.txt"), Tripod)
     detector = Detector(joinpath(SAMPLES_DIR, "v5.detx"))
     emitters = tripod_to_emitter(tripods, detector)

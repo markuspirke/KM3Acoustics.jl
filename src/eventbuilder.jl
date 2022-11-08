@@ -30,6 +30,17 @@ function read(file::HDF5.File, T::Type{Toashort}, run::Int)
     preprocess(raw_signals)
 end
 """
+    function read(filename::AbstractString, T::Type{Toashort}, run::Int)
+
+Reads a HDF5 file of toashorts.
+"""
+function read(filename::AbstractString, T::Type{Toashort}, run::Int)
+    file = h5open(filename, "r") do h5f
+        read(h5f, T, run)
+    end
+    file
+end
+"""
     function read_toa(filename::AbstractString, run::Int)
 
 Acts as a function barrier. Opens the H5 File and reads the dataset for a specific group.
