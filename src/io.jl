@@ -114,9 +114,10 @@ function write(filename::AbstractString, tripods::Vector{Tripod})
         for tripod in tripods
             pos = round.(tripod.pos, digits=3)
             if tripod.id < 10
-                write(file, @sprintf "%i    +%1.3f  +%1.3f  %1.3f\n" tripod.id pos.x pos.y pos.z)
+                @printf(file, "%i    +%1.3f  +%1.3f  %1.3f\n", tripod.id, pos.x, pos.y, pos.z)
+                # write(file, @sprintf "%i    +%1.3f  +%1.3f  %1.3f\n" tripod.id pos.x pos.y pos.z)
             elseif tripod.id > 9 && tripod.id < 100
-                write(file, @sprintf "%i   +%1.3f  +%1.3f  %1.3f\n" tripod.id pos.x pos.y pos.z)
+                @printf(file, "%i   +%1.3f  +%1.3f  %1.3f\n", tripod.id, pos.x, pos.y, pos.z)
             end
         end
     end
