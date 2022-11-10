@@ -104,6 +104,24 @@ function read(filename::AbstractString, T::Type{Tripod})
     tripods
 end
 """
+    function write(filename::AbstractString, tripods::Dict{Int8, Tripod})
+
+Writes the position of tripods out into an ASCII file.
+"""
+function write(filename::AbstractString, tripods::Vector{Tripod})
+    open(filename, "a") do file
+        write(file, "# Precalibrated autonomous acoustic beacon locations.\n")
+        for tripod in tripods
+            pos = round.(tripod.pos, digits=3)
+            if tripod.id < 10
+                write(file, @sprintf "%i    +%1.3f  +%1.3f  %1.3f\n" tripod.id pos.x pos.y pos.z)
+            elseif tripod.id > 9 && tripod.id < 100
+                write(file, @sprintf "%i   +%1.3f  +%1.3f  %1.3f\n" tripod.id pos.x pos.y pos.z)
+            end
+        end
+    end
+end
+"""
 Waveform translates Emitter ID to Tripod ID.
 """
 struct Waveform
