@@ -21,7 +21,7 @@ export
     read_events, group_events, eventtime, get_basemodules, ToyStringCalibration, StringCalibration, chi2,
     init_toydetector, init_realdetector,
     ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime, string_length, string_inverselength, calc_pos, calc_traveltime,
-    get_hydrophones, Precalibration, precalibration_startvalues, get_opt_emitters
+    get_hydrophones, Precalibration, precalibration_startvalues, get_opt_emitters, get_opt_hydrophones
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
