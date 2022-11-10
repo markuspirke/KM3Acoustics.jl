@@ -1,27 +1,33 @@
 module KM3Acoustics
 
 using Dates
-import Base: read, isless
+import Base: read, write, isless
 using LinearAlgebra
 using Statistics
+using Printf
 using StaticArrays
 using HDF5
 import DataStructures: DefaultDict
 import OrderedCollections: OrderedDict
 
 export
-    Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT, Position, UTMPosition, Location,
+    Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT,
+    Position, UTMPosition, Location,
     TriggerParameter,
     hydrophoneenabled, piezoenabled, write_compound, natural, parse_runs,
     Quaternion, Direction,
-    read,
+    read, write,
     ASignal,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Toashort, Emitter, tripod_to_emitter, Receiver, Transmission, Event, isless, overlap, save_events,
-    read_events, group_events, eventtime, get_basemodules, ToyStringCalibration, StringCalibration, chi2,
+    read_toashort, Toashort, Emitter, tripod_to_emitter, emitter_to_tripod,
+    Receiver, Transmission, Event, isless, overlap, save_events,
+    read_events, group_events, eventtime,
+    get_basemodules, ToyStringCalibration, StringCalibration, chi2,
     init_toydetector, init_realdetector,
-    ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime, string_length, string_inverselength, calc_pos, calc_traveltime,
-    get_hydrophones, Precalibration, precalibration_startvalues, get_opt_emitters, get_opt_hydrophones
+    ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime,
+    string_length, string_inverselength, calc_pos, calc_traveltime,
+    get_hydrophones, Precalibration, precalibration_startvalues,
+    get_opt_emitters, get_opt_hydrophones
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
