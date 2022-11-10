@@ -328,7 +328,7 @@ end
 function chi2(toas, toas_measured; error=50e-6)
     x = 0.0
     for (i, toa) ∈ enumerate(toas)
-        x += (toa - toas_measured[i])^2/error
+        x += (toa - toas_measured[i])^2/error^2
     end
     x
 end

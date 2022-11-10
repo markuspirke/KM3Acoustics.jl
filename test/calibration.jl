@@ -74,5 +74,5 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test [69.60198060720671] ≈ tscal.events[1].lengths
 
     @test 0.0 ≈ chi2([1.0, 2.0], [1.0, 2.0])
-    @test 20000.0 ≈ chi2(1.0,2.0)
+    @test 4.0e8 ≈ chi2(1.0,2.0)
 end
