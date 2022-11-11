@@ -189,7 +189,7 @@ end
 Base.show(io::IO, d::Detector) = print(io, "Detector with $(length(d.strings)) strings and $(d.n_modules) modules.")
 Base.length(d::Detector) = d.n_modules
 Base.eltype(::Type{Detector}) = DetectorModule
-function Base.iterate(d::Detector, state=(DetectorModule[], 1))
+function Base.iterate(d::Detector, state=(Int[], 1))
     module_ids, count = state
     count > d.n_modules && return nothing
     if count == 1
