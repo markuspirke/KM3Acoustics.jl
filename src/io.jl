@@ -50,6 +50,15 @@ function Base.show(io::IO, m::DetectorModule)
     info = m.location.floor == 0 ? "base" : "optical, $(m.n_pmts) PMTs"
     print(io, "Detectormodule ($(info)) on string $(m.location.string) floor $(m.location.floor)")
 end
+Base.length(d::DetectorModule) = d.n_pmts
+Base.eltype(::Type{DetectorModule}) = PMT
+Base.iterate(d::DetectorModule, state=1) = state > d.n_pmts ? nothing : (d.pmts[state], state+1)
+"""
+    Base.getindex(d::DetectorModule, i) = d.pmts[i+1]
+
+The index in this context is the DAQ channel ID of the PMT, which is counting from 0.
+"""
+Base.getindex(d::DetectorModule, i) = d.pmts[i+1]
 
 """
 A hydrophone, typically installed in the base module of a KM3NeT detector's
@@ -322,4 +331,37 @@ function _extract_comments(lines::Vector{T}, prefix::T) where {T<:AbstractString
         end
     end
     comments
+end
+
+
+function write(filename::AbstractString, d::Detector; version=:same)
+    isfile(filename) && @warn "File '$(filename)' already exists, overwriting."
+    open(filename, "w") do fobj
+        write(fobj, d; version=version)
+    end
+end
+
+
+writeln(io::IO, line) = write(io, line * "\n")
+
+function write(io::IO, d::Detector; version=:same)
+    if version == :same
+        version = d.version
+    else
+        println("Converting detector from format version $(d.version) to $(version).")
+    end
+    version > d.version && @warn "Target version is higher, missing parameters will be filled with reasonable default values."
+    if version == 1
+        writeln(io, "$(d.id) $(d.n_modules)")
+        for mod in d
+            writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.n_pmts)")
+            for pmt in mod
+                writeln(io, " $(pmt.id) $(pmt.pos.x) $(pmt.pos.y) $(pmt.pos.z) $(pmt.dir.x) $(pmt.dir.y) $(pmt.dir.z) $(pmt.t₀)")
+            end
+        end
+        return
+    end
+    # write(io, "$(d.id) v$(d.version)")
+
+    # write(io, "$(d.validity.from) $(d.validity.to)")
 end

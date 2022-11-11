@@ -62,6 +62,16 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
         @test "This is a comment" == comments[1]
         @test "This is another comment" == comments[2]
     end
+    @testset "DETX writing" begin
+        for from_version ∈ 1:5
+            for to_version ∈ 1
+                out = tempname()
+                d₀ = Detector(joinpath(SAMPLES_DIR, "v$(from_version).detx"))
+                write(out, d₀; version=1)
+                d = Detector(out)
+            end
+        end
+    end
     @testset "hydrophones" begin
         hydrophones = read(joinpath(SAMPLES_DIR, "hydrophone.txt"), Hydrophone)
         @test 19 == length(hydrophones)
