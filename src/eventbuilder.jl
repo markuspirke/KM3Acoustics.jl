@@ -95,6 +95,18 @@ function tripod_to_emitter(tripods, detector)
     emitters
 end
 """
+    function emitter_to_tripod(emitters::Dict{Int8, Emitter}, detector)
+
+Takes in a dictionary of emitters and returns a vector of tripods.
+"""
+function emitter_to_tripod(emitters::Dict{Int8, Emitter}, detector)
+    tripods = Tripod[]
+    for (id, emitter) ∈ sort(emitters)# change position of tripods from .txt file to relative position of the detector
+        push!(tripods, Tripod(id, emitter.pos + detector.pos))
+    end
+    tripods
+end
+"""
 Datatype which has all information of one Transmission which is later needed for the fitting procedure.
 """
 struct Transmission
