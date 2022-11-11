@@ -53,6 +53,11 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
             @test 30 == d.strings[end]
             @test 19 == length(d.strings)
         end
+
+        comments = Detector(joinpath(SAMPLES_DIR, "v3.detx")).comments
+        @test 2 == length(comments)
+        @test "This is a comment" == comments[1]
+        @test "This is another comment" == comments[2]
     end
     @testset "hydrophones" begin
         hydrophones = read(joinpath(SAMPLES_DIR, "hydrophone.txt"), Hydrophone)

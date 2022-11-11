@@ -174,6 +174,9 @@ function read(filename::AbstractString, T::Type{TriggerParameter})
 
     TriggerParameter(q, tmax, nmin)
 end
+
+const DETECTOR_COMMENT_PREFIX = "#"
+
 """
 A KM3NeT detector.
 
@@ -185,6 +188,7 @@ struct Detector
     n_modules::Int32
     modules::Dict{Int32, DetectorModule}
     strings::Vector{Int8}
+    comments::Vector{String}
 end
 Base.show(io::IO, d::Detector) = print(io, "Detector with $(length(d.strings)) strings and $(d.n_modules) modules.")
 Base.length(d::Detector) = d.n_modules
@@ -218,7 +222,10 @@ Create a `Detector` instance from an IO stream.
 """
 function Detector(io::IO)
     lines = readlines(io)
-    filter!(e->!startswith(e, "#") && !isempty(strip(e)), lines)
+
+    comments = _extract_comments(lines, DETECTOR_COMMENT_PREFIX)
+
+    filter!(e->!startswith(e, DETECTOR_COMMENT_PREFIX) && !isempty(strip(e)), lines)
 
     first_line = lowercase(first(lines))  # version can be v or V, halleluja
 
@@ -292,5 +299,26 @@ function Detector(io::IO)
         @warn "t₀ == 0 (for DOMs) -> using the average PMT t₀s instead."
     end
 
-    Detector(det_id, validity, utm_position, n_modules, modules, strings)
+    Detector(det_id, validity, utm_position, n_modules, modules, strings, comments)
+end
+
+
+
+"""
+    function _extract_comments(lines<:Vector{AbstractString}, prefix<:AbstractString)
+
+Returns only the lines which are comments, identified by the `prefix`. The prefix is
+omitted.
+
+"""
+function _extract_comments(lines::Vector{T}, prefix::T) where {T<:AbstractString}
+    comments = String[]
+    prefix_length = length(prefix)
+    for line ∈ lines
+        if startswith(line, prefix)
+            comment = strip(line[prefix_length+1:end])
+            push!(comments, comment)
+        end
+    end
+    comments
 end
