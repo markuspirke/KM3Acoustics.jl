@@ -57,11 +57,11 @@ struct Precalibration <: Function
     emitters::OrderedDict{Int8, Emitter}
 end
 """
-    function Precalibration(detector_pos, hydrophones, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+    function Precalibration(detector_pos, hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro::Int, events::Vector{Event}, emitters::Dict{Int8, Emitter})
 
 Method to set up the precalibration data type.
 """
-function Precalibration(detector_pos, hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro::Int, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+function Precalibration(detector_pos, hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro, events::Vector{Event}, emitters::Dict{Int8, Emitter})
     sorted_events = sort_events_qualityfactor(events)
     devents = Dict{Int8, Vector{Event}}()
     for event in sorted_events # sort the events from different emitters each up to 10 events
@@ -199,7 +199,6 @@ function get_opt_hydrophones(pc::Precalibration, p)
     opt_hydrophones = Dict{Int32, Hydrophone}()
     for (i, pos) in enumerate(pos_hydro)
         id = hydro_keys[i]
-        @show Hydrophone(pc.hydrophones[id].location, pos)
         opt_hydrophones[id] = Hydrophone(pc.hydrophones[id].location, pos)
     end
     opt_hydrophones[pc.key_fixhydro] = pc.hydrophones[pc.key_fixhydro]
