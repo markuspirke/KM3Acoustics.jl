@@ -10,6 +10,9 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @testset "DETX parsing" begin
         for version ∈ 1:5
             d = Detector(joinpath(SAMPLES_DIR, "v$(version).detx"))
+
+            @test version == d.version
+
             if version < 4
                 # no base modules in DETX
                 @test 342 == length(d)
