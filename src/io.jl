@@ -182,6 +182,7 @@ A KM3NeT detector.
 
 """
 struct Detector
+    version::Int8
     id::Int32
     validity::Union{DateRange, Missing}
     pos::Union{UTMPosition, Missing}
@@ -299,7 +300,7 @@ function Detector(io::IO)
         @warn "t₀ == 0 (for DOMs) -> using the average PMT t₀s instead."
     end
 
-    Detector(det_id, validity, utm_position, n_modules, modules, strings, comments)
+    Detector(version, det_id, validity, utm_position, n_modules, modules, strings, comments)
 end
 
 
