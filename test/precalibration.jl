@@ -29,3 +29,9 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test emitters == get_opt_emitters(pc, p0)
     @test hydrophones == get_opt_hydrophones(pc, p0)
 end
+
+@testset "statistics" begin
+    events = read_events(joinpath(SAMPLES_DIR, "KM3NeT_00000133_00013346_preevent.h5"), 13346)
+    @test 1.664371042252927e9 ≈ mean(events[1])
+    @test 0.0023154017972801906 ≈ std(events[1])
+end

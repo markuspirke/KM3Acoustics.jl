@@ -17,6 +17,7 @@ export
     hydrophoneenabled, piezoenabled, write_compound, natural, parse_runs,
     Quaternion, Direction,
     read, write,
+    mean, std,
     ASignal,
     SoundVelocity, velocity, traveltime,
     read_toashort, Toashort, Emitter, tripod_to_emitter, emitter_to_tripod,
@@ -45,4 +46,5 @@ include("eventbuilder.jl")
 include("geometry.jl")
 include("calibration.jl")
 include("precalibration.jl")
+include("statistics.jl")
 end
