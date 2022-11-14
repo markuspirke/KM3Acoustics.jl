@@ -152,7 +152,7 @@ function trigger!(events, emitter_id, transmissions, trigger, det_id, run_number
         end
         k = j - i + 1 #events in time frame
         if k >= trigger.nmin #if more then 90 signal during tmax write down the event
-           push!(events, Event(det_id, run_number, k, emitter_id, transmissions[i:j]))
+           push!(events, Event(det_id, run_number, k, emitter_id, transmissions[i:j-1]))
         end
     end
 end
@@ -175,7 +175,7 @@ function trigger1!(events, emitter_id, transmissions, trigger, det_id, run_numbe
         k = j - i + 1 #events in time frame
 
         if k >= trigger.nmin #if more then 90 signal during tmax write down the event
-            push!(events, Event(det_id, run_number, k, emitter_id, transmissions[i:j]))
+            push!(events, Event(det_id, run_number, k, emitter_id, transmissions[i:j-1]))
             i = j #set loop to event j which is the first event not involved in event ealier
         else
             i += 1 #if less then nmin signals start with next transmission
