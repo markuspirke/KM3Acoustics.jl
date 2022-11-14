@@ -67,9 +67,9 @@ function traveltime(A, B)
     dz = A.pos.z - B.pos.z #difference in height
 
     if dz ≈ 0.0
-        R/v_A.v₀
+        abs(R/v_A.v₀)
     else
-        R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀) #result of integration
+        abs(R/(dz * v_A.dv_dz) * log(abs(v_A.v₀/v_B.v₀))) #result of integration
     end
 end
 
@@ -87,9 +87,9 @@ function traveltime(A, B, z_reference)
     dz = A.pos.z - B.pos.z #difference in height
 
     if dz ≈ 0.0
-        R/v_A.v₀
+        abs(R/v_A.v₀)
     else
-        R/(dz * v_A.dv_dz) * log(v_A.v₀/v_B.v₀) #result of integration
+        abs(R/(dz * v_A.dv_dz) * log(abs(v_A.v₀/v_B.v₀)))#result of integration
     end
 end
 """
@@ -105,9 +105,9 @@ function traveltime(R::T, z1::T, z2::T) where {T<:Real}
     dz = z1 - z2 #difference in height
 
     if dz ≈ 0.0
-        R/v_1.v₀
+        abs(R/v_1.v₀)
     else
-        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
+        abs(R/(dz * v_1.dv_dz) * log(abs(v_1.v₀/v_2.v₀))) #result of integration
     end
 end
 
@@ -125,9 +125,9 @@ function traveltime(R, z1, z2, z_reference)
     dz = z1 - z2 #difference in height
 
     if dz ≈ 0.0
-        R/v_1.v₀
+        abs(R/v_1.v₀)
     else
-        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
+        abs(R/(dz * v_1.dv_dz) * log(abs(v_1.v₀/v_2.v₀))) #result of integration
     end
 end
 """
@@ -144,9 +144,9 @@ function traveltime(x::Position, y::Position)
     dz = x.z - y.z #difference in height
 
     if dz ≈ 0.0
-        R/v_1.v₀
+        abs(R/v_1.v₀)
     else
-        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
+        abs(R/(dz * v_1.dv_dz) * log(abs(v_1.v₀/v_2.v₀))) #result of integration
     end
 end
 
@@ -165,8 +165,8 @@ function traveltime(x::Position{T}, y::Position{T}, z_reference) where {T<:Real}
     dz = x.z - y.z #difference in height
 
     if dz ≈ 0.0
-        R/v_1.v₀
+        abs(R/v_1.v₀)
     else
-        R/(dz * v_1.dv_dz) * log(v_1.v₀/v_2.v₀) #result of integration
+        abs(R/(dz * v_1.dv_dz) * log(abs(v_1.v₀/v_2.v₀))) #result of integration
     end
 end
