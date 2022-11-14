@@ -69,6 +69,15 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
                 d₀ = Detector(joinpath(SAMPLES_DIR, "v$(from_version).detx"))
                 write(out, d₀; version=to_version)
                 d = Detector(out)
+                @test length(d₀) == length(d)
+                if to_version >= from_version
+                    for module_id ∈ collect(keys(d₀.modules))[:23]
+                        @test d₀.modules[module_id].pos ≈ d.modules[module_id].pos
+                        if from_version >= 3
+                            @test d₀.modules[module_id].t₀ ≈ d.modules[module_id].t₀
+                        end
+                    end
+                end
             end
         end
     end
