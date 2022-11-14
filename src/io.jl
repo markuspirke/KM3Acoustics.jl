@@ -371,7 +371,7 @@ function write(io::IO, d::Detector; version=:same)
     if version == :same
         version = d.version
     else
-        println("Converting detector from format version $(d.version) to $(version).")
+        version != d.version && println("Converting detector from format version $(d.version) to $(version).")
     end
     version > d.version && @warn "Target version is higher, missing parameters will be filled with reasonable default values."
 
@@ -394,7 +394,7 @@ function write(io::IO, d::Detector; version=:same)
             valid_from = datetime2unix(d.validity.from)
             valid_to = datetime2unix(d.validity.to)
         end
-        writeln(io, "$(valid_from) $(valid_to)")
+        @printf(io, "%.1f %.1f\n", valid_from, valid_to)
         if ismissing(d.pos)
             utm_ref_grid = "WGS84 32N"  # grid of ORCA and ARCA
             east = 0
@@ -406,7 +406,7 @@ function write(io::IO, d::Detector; version=:same)
             north = d.pos.north
             z = d.pos.z
         end
-        writeln(io, "UTM $(utm_ref_grid) $(east) $(north) $(z)")
+        @printf(io, "UTM %s %.3f %.3f %.3f\n", utm_ref_grid, east, north, z)
     end
 
     if version > 1
@@ -423,16 +423,16 @@ function write(io::IO, d::Detector; version=:same)
                 q0, qx, qy, qz = mod.q
             end
             if version == 4
-                writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.pos.x) $(mod.pos.y) $(mod.pos.z) $(q0) $(qx) $(qy) $(qz) $(mod.t₀) $(mod.n_pmts)")
+                @printf(io, "%d %d %d %.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f %d\n", mod.id, mod.location.string, mod.location.floor, mod.pos.x, mod.pos.y, mod.pos.z, q0, qx, qy, qz, mod.t₀, mod.n_pmts)
             end
             if version > 4
-                writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.pos.x) $(mod.pos.y) $(mod.pos.z) $(q0) $(qx) $(qy) $(qz) $(mod.t₀) $(mod.status) $(mod.n_pmts)")
+                @printf(io, "%d %d %d %.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f %d %d\n", mod.id, mod.location.string, mod.location.floor, mod.pos.x, mod.pos.y, mod.pos.z, q0, qx, qy, qz, mod.t₀, mod.status, mod.n_pmts)
             end
         end
         for pmt in mod
-            write(io, " $(pmt.id) $(pmt.pos.x) $(pmt.pos.y) $(pmt.pos.z) $(pmt.dir.x) $(pmt.dir.y) $(pmt.dir.z) $(pmt.t₀)")
+            @printf(io, " %d %.8f %.8f %.8f %.8f %.8f %.8f %.8f",  pmt.id, pmt.pos.x, pmt.pos.y, pmt.pos.z, pmt.dir.x, pmt.dir.y, pmt.dir.z, pmt.t₀)
             if version >= 3
-                write(io, " $(pmt.status)")
+                @printf(io, " %d", pmt.status)
             end
             write(io, "\n")
         end
