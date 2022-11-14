@@ -38,13 +38,13 @@ definitions/module_status.jl for the bit positions and check them using the
 """
 struct DetectorModule
     id::Int32
-    pos::Union{Position, Missing}
+    pos::Position
     location::Location
     n_pmts::Int8
     pmts::Vector{PMT}
     q::Union{Quaternion, Missing}
-    status::Union{Int32, Missing}
-    t₀::Union{Float64, Missing}
+    status::Int32
+    t₀::Float64
 end
 function Base.show(io::IO, m::DetectorModule)
     info = m.location.floor == 0 ? "base" : "optical, $(m.n_pmts) PMTs"
@@ -195,6 +195,7 @@ struct Detector
     id::Int32
     validity::Union{DateRange, Missing}
     pos::Union{UTMPosition, Missing}
+    utm_ref_grid::Union{String, Missing}
     n_modules::Int32
     modules::Dict{Int32, DetectorModule}
     strings::Vector{Int8}
@@ -241,15 +242,16 @@ function Detector(io::IO)
 
     if occursin("v", first_line)
         det_id, version = map(x->parse(Int,x), split(first_line, 'v'))
-        # TODO: reference grid is not read out
         validity = DateRange(map(unix2datetime, map(x->parse(Float64, x), split(lines[2])))...)
         utm_position = UTMPosition(map(x->parse(Float64, x), split(lines[3])[4:6])...)
+        utm_ref_grid = join(split(lines[3])[2:3], " ")
         n_modules = parse(Int, lines[4])
         idx = 5
     else
         det_id, n_modules = map(x->parse(Int,x), split(first_line))
         version = 1
         utm_position = missing
+        utm_ref_grid = missing
         validity = missing
         idx = 2
     end
@@ -257,6 +259,7 @@ function Detector(io::IO)
     modules = Dict{Int32, DetectorModule}()
 
     t₀_warning = false
+    pos_warning = false
 
     strings = Int8[]
 
@@ -279,7 +282,7 @@ function Detector(io::IO)
         if version >= 5
             status = parse(Float64, elements[12])
         else
-            status = missing
+            status = 0  # default value is 0: module OK
         end
         n_pmts = parse(Int, elements[end])
 
@@ -292,7 +295,7 @@ function Detector(io::IO)
             if version >= 3
                 pmt_status = parse(Int, l[9])
             else
-                pmt_status = missing
+                pmt_status = 0  # default value is 0: PMT OK
             end
             push!(pmts, PMT(pmt_id, Position(x, y, z), Direction(dx, dy, dz), t0, pmt_status))
         end
@@ -302,14 +305,25 @@ function Detector(io::IO)
             t₀_warning = true
         end
 
+        if ismissing(pos)
+            if length(pmts) > 0
+                pos = mean([pmt.pos for pmt in pmts])
+            else
+                pos = Position(0, 0, 0)
+            end
+            pos_warning = true
+        end
+
         modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
         idx += n_pmts + 1
     end
-    if t₀_warning
-        @warn "t₀ == 0 (for DOMs) -> using the average PMT t₀s instead."
+
+    t₀_warning && @warn "t₀ == 0 (for DOMs) -> using the averaged PMT t₀s instead."
+    if pos_warning
+        @warn "The optical module positions were calculated from the PMT positions and the base modules were placed at (0, 0, 0)."
     end
 
-    Detector(version, det_id, validity, utm_position, n_modules, modules, strings, comments)
+    Detector(version, det_id, validity, utm_position, utm_ref_grid, n_modules, modules, strings, comments)
 end
 
 
@@ -342,8 +356,17 @@ function write(filename::AbstractString, d::Detector; version=:same)
 end
 
 
+# Helper function to write a line with a new line at the end
 writeln(io::IO, line) = write(io, line * "\n")
 
+"""
+    function write(io::IO, d::Detector; version=:same)
+
+Writes the detector to a DETX formatted file. The target version can be specified
+via the `version` keyword. Note that if converting to higher versions, missing
+parameters will be filled with reasonable default values. In case of downgrading,
+information will be lost.
+"""
 function write(io::IO, d::Detector; version=:same)
     if version == :same
         version = d.version
@@ -351,17 +374,67 @@ function write(io::IO, d::Detector; version=:same)
         println("Converting detector from format version $(d.version) to $(version).")
     end
     version > d.version && @warn "Target version is higher, missing parameters will be filled with reasonable default values."
+
+    if version >= 3
+        for comment in d.comments
+            writeln(io, "$(DETECTOR_COMMENT_PREFIX) $(comment)")
+        end
+    end
     if version == 1
         writeln(io, "$(d.id) $(d.n_modules)")
-        for mod in d
+    elseif version > 1
+        writeln(io, "$(d.id) v$(version)")
+    end
+
+    if version > 1
+        if ismissing(d.validity)
+            valid_from = 0.0
+            valid_to = 9999999999.0
+        else
+            valid_from = datetime2unix(d.validity.from)
+            valid_to = datetime2unix(d.validity.to)
+        end
+        writeln(io, "$(valid_from) $(valid_to)")
+        if ismissing(d.pos)
+            utm_ref_grid = "WGS84 32N"  # grid of ORCA and ARCA
+            east = 0
+            north = 0
+            z = 0
+        else
+            utm_ref_grid = d.utm_ref_grid
+            east = d.pos.east
+            north = d.pos.north
+            z = d.pos.z
+        end
+        writeln(io, "UTM $(utm_ref_grid) $(east) $(north) $(z)")
+    end
+
+    if version > 1
+        writeln(io, "$(d.n_modules)")
+    end
+
+    for mod in d
+        if version < 4
             writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.n_pmts)")
-            for pmt in mod
-                writeln(io, " $(pmt.id) $(pmt.pos.x) $(pmt.pos.y) $(pmt.pos.z) $(pmt.dir.x) $(pmt.dir.y) $(pmt.dir.z) $(pmt.t₀)")
+        else
+            if ismissing(mod.q)
+                q0, qx, qy, qz = (0, 0, 0, 0)
+            else
+                q0, qx, qy, qz = mod.q
+            end
+            if version == 4
+                writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.pos.x) $(mod.pos.y) $(mod.pos.z) $(q0) $(qx) $(qy) $(qz) $(mod.t₀) $(mod.n_pmts)")
+            end
+            if version > 4
+                writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.pos.x) $(mod.pos.y) $(mod.pos.z) $(q0) $(qx) $(qy) $(qz) $(mod.t₀) $(mod.status) $(mod.n_pmts)")
             end
         end
-        return
+        for pmt in mod
+            write(io, " $(pmt.id) $(pmt.pos.x) $(pmt.pos.y) $(pmt.pos.z) $(pmt.dir.x) $(pmt.dir.y) $(pmt.dir.z) $(pmt.t₀)")
+            if version >= 3
+                write(io, " $(pmt.status)")
+            end
+            write(io, "\n")
+        end
     end
-    # write(io, "$(d.id) v$(d.version)")
-
-    # write(io, "$(d.validity.from) $(d.validity.to)")
 end

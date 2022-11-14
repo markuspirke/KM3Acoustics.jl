@@ -64,10 +64,10 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     end
     @testset "DETX writing" begin
         for from_version ∈ 1:5
-            for to_version ∈ 1
+            for to_version ∈ 1:5
                 out = tempname()
                 d₀ = Detector(joinpath(SAMPLES_DIR, "v$(from_version).detx"))
-                write(out, d₀; version=1)
+                write(out, d₀; version=to_version)
                 d = Detector(out)
             end
         end
@@ -105,7 +105,7 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     end
 
     @testset "utilities" begin
-        mod = DetectorModule(1, missing, Location(0, 0), 0, PMT[], missing, 0, missing)
+        mod = DetectorModule(1, UTMPosition(0, 0, 0), Location(0, 0), 0, PMT[], missing, 0, 0)
         @test hydrophoneenabled(mod)
         @test piezoenabled(mod)
     end
