@@ -10,6 +10,9 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @testset "DETX parsing" begin
         for version ∈ 1:5
             d = Detector(joinpath(SAMPLES_DIR, "v$(version).detx"))
+
+            @test version == d.version
+
             if version < 4
                 # no base modules in DETX
                 @test 342 == length(d)
@@ -53,6 +56,30 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
             @test 30 == d.strings[end]
             @test 19 == length(d.strings)
         end
+
+        comments = Detector(joinpath(SAMPLES_DIR, "v3.detx")).comments
+        @test 2 == length(comments)
+        @test "This is a comment" == comments[1]
+        @test "This is another comment" == comments[2]
+    end
+    @testset "DETX writing" begin
+        for from_version ∈ 1:5
+            for to_version ∈ 1:5
+                out = tempname()
+                d₀ = Detector(joinpath(SAMPLES_DIR, "v$(from_version).detx"))
+                write(out, d₀; version=to_version)
+                d = Detector(out)
+                @test length(d₀) == length(d)
+                if to_version >= from_version
+                    for module_id ∈ collect(keys(d₀.modules))[:23]
+                        @test d₀.modules[module_id].pos ≈ d.modules[module_id].pos
+                        if from_version >= 3
+                            @test d₀.modules[module_id].t₀ ≈ d.modules[module_id].t₀
+                        end
+                    end
+                end
+            end
+        end
     end
     @testset "hydrophones" begin
         hydrophones = read(joinpath(SAMPLES_DIR, "hydrophone.txt"), Hydrophone)
@@ -87,7 +114,7 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     end
 
     @testset "utilities" begin
-        mod = DetectorModule(1, missing, Location(0, 0), 0, PMT[], missing, 0, missing)
+        mod = DetectorModule(1, UTMPosition(0, 0, 0), Location(0, 0), 0, PMT[], missing, 0, 0)
         @test hydrophoneenabled(mod)
         @test piezoenabled(mod)
     end

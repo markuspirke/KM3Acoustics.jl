@@ -38,18 +38,27 @@ definitions/module_status.jl for the bit positions and check them using the
 """
 struct DetectorModule
     id::Int32
-    pos::Union{Position, Missing}
+    pos::Position
     location::Location
     n_pmts::Int8
     pmts::Vector{PMT}
     q::Union{Quaternion, Missing}
-    status::Union{Int32, Missing}
-    t₀::Union{Float64, Missing}
+    status::Int32
+    t₀::Float64
 end
 function Base.show(io::IO, m::DetectorModule)
     info = m.location.floor == 0 ? "base" : "optical, $(m.n_pmts) PMTs"
     print(io, "Detectormodule ($(info)) on string $(m.location.string) floor $(m.location.floor)")
 end
+Base.length(d::DetectorModule) = d.n_pmts
+Base.eltype(::Type{DetectorModule}) = PMT
+Base.iterate(d::DetectorModule, state=1) = state > d.n_pmts ? nothing : (d.pmts[state], state+1)
+"""
+    Base.getindex(d::DetectorModule, i) = d.pmts[i+1]
+
+The index in this context is the DAQ channel ID of the PMT, which is counting from 0.
+"""
+Base.getindex(d::DetectorModule, i) = d.pmts[i+1]
 
 """
 A hydrophone, typically installed in the base module of a KM3NeT detector's
@@ -174,22 +183,28 @@ function read(filename::AbstractString, T::Type{TriggerParameter})
 
     TriggerParameter(q, tmax, nmin)
 end
+
+const DETECTOR_COMMENT_PREFIX = "#"
+
 """
 A KM3NeT detector.
 
 """
 struct Detector
+    version::Int8
     id::Int32
     validity::Union{DateRange, Missing}
     pos::Union{UTMPosition, Missing}
+    utm_ref_grid::Union{String, Missing}
     n_modules::Int32
     modules::Dict{Int32, DetectorModule}
     strings::Vector{Int8}
+    comments::Vector{String}
 end
 Base.show(io::IO, d::Detector) = print(io, "Detector with $(length(d.strings)) strings and $(d.n_modules) modules.")
 Base.length(d::Detector) = d.n_modules
 Base.eltype(::Type{Detector}) = DetectorModule
-function Base.iterate(d::Detector, state=(DetectorModule[], 1))
+function Base.iterate(d::Detector, state=(Int[], 1))
     module_ids, count = state
     count > d.n_modules && return nothing
     if count == 1
@@ -218,21 +233,25 @@ Create a `Detector` instance from an IO stream.
 """
 function Detector(io::IO)
     lines = readlines(io)
-    filter!(e->!startswith(e, "#") && !isempty(strip(e)), lines)
+
+    comments = _extract_comments(lines, DETECTOR_COMMENT_PREFIX)
+
+    filter!(e->!startswith(e, DETECTOR_COMMENT_PREFIX) && !isempty(strip(e)), lines)
 
     first_line = lowercase(first(lines))  # version can be v or V, halleluja
 
     if occursin("v", first_line)
         det_id, version = map(x->parse(Int,x), split(first_line, 'v'))
-        # TODO: reference grid is not read out
         validity = DateRange(map(unix2datetime, map(x->parse(Float64, x), split(lines[2])))...)
         utm_position = UTMPosition(map(x->parse(Float64, x), split(lines[3])[4:6])...)
+        utm_ref_grid = join(split(lines[3])[2:3], " ")
         n_modules = parse(Int, lines[4])
         idx = 5
     else
         det_id, n_modules = map(x->parse(Int,x), split(first_line))
         version = 1
         utm_position = missing
+        utm_ref_grid = missing
         validity = missing
         idx = 2
     end
@@ -240,6 +259,7 @@ function Detector(io::IO)
     modules = Dict{Int32, DetectorModule}()
 
     t₀_warning = false
+    pos_warning = false
 
     strings = Int8[]
 
@@ -262,7 +282,7 @@ function Detector(io::IO)
         if version >= 5
             status = parse(Float64, elements[12])
         else
-            status = missing
+            status = 0  # default value is 0: module OK
         end
         n_pmts = parse(Int, elements[end])
 
@@ -275,7 +295,7 @@ function Detector(io::IO)
             if version >= 3
                 pmt_status = parse(Int, l[9])
             else
-                pmt_status = missing
+                pmt_status = 0  # default value is 0: PMT OK
             end
             push!(pmts, PMT(pmt_id, Position(x, y, z), Direction(dx, dy, dz), t0, pmt_status))
         end
@@ -285,12 +305,136 @@ function Detector(io::IO)
             t₀_warning = true
         end
 
+        if ismissing(pos)
+            if length(pmts) > 0
+                pos = mean([pmt.pos for pmt in pmts])
+            else
+                pos = Position(0, 0, 0)
+            end
+            pos_warning = true
+        end
+
         modules[module_id] = DetectorModule(module_id, pos, Location(string, floor), n_pmts, pmts, q, status, t₀)
         idx += n_pmts + 1
     end
-    if t₀_warning
-        @warn "t₀ == 0 (for DOMs) -> using the average PMT t₀s instead."
+
+    t₀_warning && @warn "t₀ == 0 (for DOMs) -> using the averaged PMT t₀s instead."
+    if pos_warning
+        @warn "The optical module positions were calculated from the PMT positions and the base modules were placed at (0, 0, 0)."
     end
 
-    Detector(det_id, validity, utm_position, n_modules, modules, strings)
+    Detector(version, det_id, validity, utm_position, utm_ref_grid, n_modules, modules, strings, comments)
+end
+
+
+
+"""
+    function _extract_comments(lines<:Vector{AbstractString}, prefix<:AbstractString)
+
+Returns only the lines which are comments, identified by the `prefix`. The prefix is
+omitted.
+
+"""
+function _extract_comments(lines::Vector{T}, prefix::T) where {T<:AbstractString}
+    comments = String[]
+    prefix_length = length(prefix)
+    for line ∈ lines
+        if startswith(line, prefix)
+            comment = strip(line[prefix_length+1:end])
+            push!(comments, comment)
+        end
+    end
+    comments
+end
+
+
+function write(filename::AbstractString, d::Detector; version=:same)
+    isfile(filename) && @warn "File '$(filename)' already exists, overwriting."
+    open(filename, "w") do fobj
+        write(fobj, d; version=version)
+    end
+end
+
+
+# Helper function to write a line with a new line at the end
+writeln(io::IO, line) = write(io, line * "\n")
+
+"""
+    function write(io::IO, d::Detector; version=:same)
+
+Writes the detector to a DETX formatted file. The target version can be specified
+via the `version` keyword. Note that if converting to higher versions, missing
+parameters will be filled with reasonable default values. In case of downgrading,
+information will be lost.
+"""
+function write(io::IO, d::Detector; version=:same)
+    if version == :same
+        version = d.version
+    else
+        version != d.version && println("Converting detector from format version $(d.version) to $(version).")
+    end
+    version > d.version && @warn "Target version is higher, missing parameters will be filled with reasonable default values."
+
+    if version >= 3
+        for comment in d.comments
+            writeln(io, "$(DETECTOR_COMMENT_PREFIX) $(comment)")
+        end
+    end
+    if version == 1
+        writeln(io, "$(d.id) $(d.n_modules)")
+    elseif version > 1
+        writeln(io, "$(d.id) v$(version)")
+    end
+
+    if version > 1
+        if ismissing(d.validity)
+            valid_from = 0.0
+            valid_to = 9999999999.0
+        else
+            valid_from = datetime2unix(d.validity.from)
+            valid_to = datetime2unix(d.validity.to)
+        end
+        @printf(io, "%.1f %.1f\n", valid_from, valid_to)
+        if ismissing(d.pos)
+            utm_ref_grid = "WGS84 32N"  # grid of ORCA and ARCA
+            east = 0
+            north = 0
+            z = 0
+        else
+            utm_ref_grid = d.utm_ref_grid
+            east = d.pos.east
+            north = d.pos.north
+            z = d.pos.z
+        end
+        @printf(io, "UTM %s %.3f %.3f %.3f\n", utm_ref_grid, east, north, z)
+    end
+
+    if version > 1
+        writeln(io, "$(d.n_modules)")
+    end
+
+    for mod in d
+        if version < 4
+            writeln(io, "$(mod.id) $(mod.location.string) $(mod.location.floor) $(mod.n_pmts)")
+        else
+            if ismissing(mod.q)
+                q0, qx, qy, qz = (0, 0, 0, 0)
+            else
+                q0, qx, qy, qz = mod.q
+            end
+            if version == 4
+                @printf(io, "%d %d %d %.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f %d\n", mod.id, mod.location.string, mod.location.floor, mod.pos.x, mod.pos.y, mod.pos.z, q0, qx, qy, qz, mod.t₀, mod.n_pmts)
+            end
+            if version > 4
+                @printf(io, "%d %d %d %.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f %d %d\n", mod.id, mod.location.string, mod.location.floor, mod.pos.x, mod.pos.y, mod.pos.z, q0, qx, qy, qz, mod.t₀, mod.status, mod.n_pmts)
+            end
+        end
+        for pmt in mod
+            @printf(io, " %d %.8f %.8f %.8f %.8f %.8f %.8f %.8f",  pmt.id, pmt.pos.x, pmt.pos.y, pmt.pos.z, pmt.dir.x, pmt.dir.y, pmt.dir.z, pmt.t₀)
+            if version >= 3
+                @printf(io, " %d", pmt.status)
+            end
+            write(io, "\n")
+        end
+    end
 end
