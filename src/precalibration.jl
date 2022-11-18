@@ -61,12 +61,12 @@ end
 
 Method to set up the precalibration data type.
 """
-function Precalibration(detector_pos, hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+function Precalibration(detector_pos, hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro, events::Vector{Event}, emitters::Dict{Int8, Emitter}; numevents = 10)
     sorted_events = sort_events_qualityfactor(events)
     devents = Dict{Int8, Vector{Event}}()
     for event in sorted_events # sort the events from different emitters each up to 10 events
         if (event.id in keys(devents))
-            if length(devents[event.id]) < 20
+            if length(devents[event.id]) < numevents
                 push!(devents[event.id], event)
             end
         else
