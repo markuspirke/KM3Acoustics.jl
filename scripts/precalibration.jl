@@ -18,6 +18,8 @@ using DocOpt
 using KM3Acoustics
 using ProgressMeter
 using Optim
+using KM3AcousticsPlots
+using GLMakie
 
 function main()
     args = docopt(doc)
@@ -30,19 +32,26 @@ function main()
     println("Reading tripods")
     tripods = read(joinpath(args["-i"], "tripod.txt"), Tripod)
     emitters = tripod_to_emitter(tripods, detector)
-    key_fixhydro = collect(keys(hydrophones))[1]
+    key_fixhydro = 12
 
-    pc = Precalibration(detector.pos, hydrophones, key_fixhydro, events, emitters)
-    p0 = precalibration_startvalues(pc)
-    res = optimize(pc, p0, ConjugateGradient(); autodiff= :forward)
-    println("reduced chi2: $(pc(res.minimizer))")
-    new_emitters = get_opt_emitters(pc, res.minimizer)
-    new_tripods = emitter_to_tripod(new_emitters, detector)
-    new_hydrophones = get_opt_hydrophones(pc, res.minimizer)
+    @showprogress "Precalibration" for numevent in 5:20
+        pc = Precalibration(detector.pos, hydrophones, key_fixhydro, events, emitters; numevents=numevent)
+        p0 = precalibration_startvalues(pc)
+        res = optimize(pc, p0, LBFGS(); autodiff= :forward)
+        println("reduced chi2: $(pc(res.minimizer))")
+        new_emitters = get_opt_emitters(pc, res.minimizer)
+        new_tripods = emitter_to_tripod(new_emitters, detector)
+        new_hydrophones = get_opt_hydrophones(pc, res.minimizer)
+        new_detector = KM3Acoustics.detector_precalibration(detector, new_hydrophones, joinpath(args["-i"], "hydrophone.txt"))
+        fig, ax = meshscatter(new_detector, new_emitters)
+        Makie.save("detector1_numevent$(numevent).png", fig)
+    end
+
 
     filename = joinpath(args["-i"], "newtripod.txt")
 #    rm(filename)
     write(filename, new_tripods)
+    write("test.detx", new_detector)
 
 end
 

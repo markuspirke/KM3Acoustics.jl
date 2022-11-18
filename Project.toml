@@ -4,6 +4,7 @@ authors = ["Markus Pirke <markus.pirke@web.de> and contributors"]
 version = "0.1.0"
 
 [deps]
+AngleBetweenVectors = "ec570357-d46e-52ed-9726-18773498274d"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DocOpt = "968ba79b-81e4-546f-ab3a-2eecfa62a9db"

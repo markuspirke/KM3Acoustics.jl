@@ -3,6 +3,7 @@ module KM3Acoustics
 using Dates
 import Base: read, write, isless
 using LinearAlgebra
+using AngleBetweenVectors
 using Statistics
 using Printf
 using StaticArrays
@@ -27,7 +28,7 @@ export
     init_toydetector, init_realdetector,
     ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime,
     string_length, string_inverselength, calc_pos, calc_traveltime,
-    get_hydrophones, Precalibration, precalibration_startvalues,
+    get_hydrophones, Precalibration, precalibration_startvalues, rotate_detector,
     get_opt_emitters, get_opt_hydrophones
 
 
