@@ -1,5 +1,7 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
+*.png
+*.h5
 /todo.org
 /Manifest.toml
