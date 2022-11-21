@@ -68,18 +68,22 @@ end
 
 Method to set up the precalibration data type.
 """
-function Precalibration(detector_pos, events::Vector{Event}, hydrophones::OrderedDict{Int32, Hydrophone}, fixhydrophones, emitters::Dict{Int8, Emitter}, fixemitters; rotate=0, nevents=10)
+function Precalibration(detector_pos, events::Vector{Event}, hydrophones::OrderedDict{Int32, Hydrophone}, fixhydrophones, emitters::Dict{Int8, Emitter}, fixemitters; rotate=0, nevents=10, mask=0)
     h_map = lookuptable_hydrophones(hydrophones)
-    sorted_events = sort_fitevents(events, :Q) #sort by Q factor
+    sorted_events = sort_fitevents(events, :TOE, rev=false) #sort by Q factor
     fitevents, numevents = group_fitevents(sorted_events, nevents)
-    p0s, mapping = generate_startvalues(hydrophones, emitters, fixhydrophones, fixemitters, fitevents)
+    if mask != 0
+        fitevents, numevents = select_fitevents(fitevents, mask)
+    end
+
+    semitters = sort(emitters)
     if rotate != 0
-        hydrophones, emitters, ϕ = rotate_detector(hydrophones, emitters, hydrophones[rotate].pos)
+        hydrophones, semitters, ϕ = rotate_detector(hydrophones, semitters, hydrophones[rotate].pos)
     else
         ϕ = 0.0
     end
-
-    Precalibration(detector_pos, fitevents, numevents, hydrophones, h_map, fixhydrophones, sort(emitters), fixemitters, p0s, mapping, ϕ)
+    p0s, mapping = generate_startvalues(hydrophones, semitters, fixhydrophones, fixemitters, fitevents)
+    Precalibration(detector_pos, fitevents, numevents, hydrophones, h_map, fixhydrophones, semitters, fixemitters, p0s, mapping, ϕ)
 end
 """
     function sort_events_qualityfactor(events::Vector{Event})
