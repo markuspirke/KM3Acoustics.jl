@@ -12,6 +12,6 @@ fixhydro = [(x, :x), (x, :y), (x, :z)]
 fixemitters = []
 
 # pc = Precalibration(detector.pos, events, hydrophones, fixhydro, emitters, fixemitters; rotate=0, nevents=5)
-pc = KM3Acoustics.Precalibration(detector.pos, hydrophones, 12, events, emitters; numevents=30)
+pc = KM3Acoustics.Precalibration(detector.pos, hydrophones, 10, events, emitters; numevents=30)
 p0 = KM3Acoustics.precalibration_startvalues(pc)
 @show pc(p0)
