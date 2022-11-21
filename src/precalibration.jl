@@ -234,6 +234,9 @@ Function which will be optimized for the precalibration of hydrophones and tripo
 function (pc::Precalibration)(p::Vector{T}) where {T}
     ps = unwrap(p, pc)
     pos_hydros, pos_emitters, toes = split_p(ps, pc)
+    @show pos_hydros
+    @show pos_emitters
+    @show toes
     toas = T[] # measured time of arrivals
     ts = T[] #calculated time of arrivals
 
@@ -247,18 +250,22 @@ function (pc::Precalibration)(p::Vector{T}) where {T}
             for transmission in event.data
                 n_transmissions += 1
                 idx_hydro = pc.h_map[transmission.string]
+                if !(collect(keys(pc.hydrophones))[idx_hydro] == transmission.string)
+                    @warn "WOOF"
+                end
+                if !(collect(keys(pc.emitters))[idx_emitter] == event.id)
+                    @warn "WOOF"
+                end
                 R = norm(pos_hydros[idx_hydro] - pos_emitters[idx_emitter])
                 t = traveltime(R, pos_hydros[idx_hydro].z, pos_emitters[idx_emitter].z, pc.detector_pos.z)
+                @show t
                 t += toes[idx_event]
                 push!(ts, t)
                 push!(toas, transmission.TOA)
             end
         end
     end
-    @show mean(ts) mean(toas)
-    @show mean(ts) - mean(toas)
-    @show mean(ts - toas)
-    @show n_transmissions
+    @show idx_event
     ndgf = n_transmissions - length(p)
     chi2(ts, toas)/ndgf
 end
