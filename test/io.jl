@@ -92,11 +92,11 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
 
     @testset "tripod" begin
         tripods = read(joinpath(SAMPLES_DIR, "tripod.txt"), Tripod)
-        @test 5 == length(tripods)
-        @test 3 == tripods[1].id
-        @test Position(587848.700, +4016749.700, -3450.467) ≈ tripods[1].pos
-        @test 10 == tripods[end].id
-        @test Position(587763.722, 4.017253398e6, -3453.894) ≈ tripods[end].pos
+        @test 6 == length(tripods)
+        @test 7 == tripods[1].id
+        @test Position(+587198.628 ,+4016228.693 ,-3433.306) ≈ tripods[1].pos
+        @test 13 == tripods[end].id
+        @test Position(+587510.740 ,+4016869.160 ,-3451.700) ≈ tripods[end].pos
     end
 
     @testset "waveform" begin

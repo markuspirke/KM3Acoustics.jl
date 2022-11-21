@@ -30,11 +30,11 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 7 == emitters[7].id
     @test Position(-401.3719999999739, -571.3070000000298, 16.69399999999996) ≈ emitters[7].pos
     newtripods = emitter_to_tripod(emitters, detector)
-    @test 5 == length(newtripods)
-    @test 3 == newtripods[1].id
-    @test Position(587848.700, +4016749.700, -3450.467) ≈ newtripods[1].pos
-    @test 10 == newtripods[end].id
-    @test Position(587763.722, 4.017253398e6, -3453.894) ≈ newtripods[end].pos
+    @test 6 == length(newtripods)
+    @test 7 == newtripods[1].id
+    @test Position(+587198.628 ,+4016228.693 ,-3433.306) ≈ newtripods[1].pos
+    @test 13 == tripods[end].id
+    @test Position(+587510.740 ,+4016869.160 ,-3451.700) ≈ newtripods[end].pos
 
     A = Transmission(1, 1, 1, 1.0, 1.1, 0.0)
     B = Transmission(1, 1, 1,  2.0, 1.1, 0.0)
