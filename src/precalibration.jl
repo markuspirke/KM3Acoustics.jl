@@ -118,6 +118,15 @@ function group_fitevents(events::Vector{Event}, nevents)
     end
     sort(devents), nevents*length(devents)
 end
+
+function select_fitevents(events, mask)
+    newevents = Dict{Int8, Vector{Event}}()
+    for (k, event) in events
+        newevents[k] = event[mask]
+    end
+    sort(newevents), length(mask)*length(events)
+end
+
 """
     function generate_startvalues(hydrophones, emitters, fixhydrophones, fixemitters, fitevents)
 
