@@ -37,7 +37,7 @@ function main()
         check_basemodules = true
     end
 
-    trigger_param = TriggerParameter(0.0, 0.02, 16)
+    trigger_param = TriggerParameter(0.0, 0.015, 16)
 
     receivers = Dict{Int32, Receiver}()
     emitters = tripod_to_emitter(tripods, detector)
