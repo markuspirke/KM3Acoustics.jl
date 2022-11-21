@@ -78,7 +78,11 @@ function Precalibration(detector_pos, events::Vector{Event}, hydrophones::Ordere
 
     semitters = sort(emitters)
     if rotate != 0
-        hydrophones, semitters, ϕ = rotate_detector(hydrophones, semitters, hydrophones[rotate].pos)
+        if rotate[1] == :Hydrophone
+            hydrophones, semitters, ϕ = rotate_detector(hydrophones, semitters, hydrophones[rotate[2]].pos)
+        elseif rotate[1] == :Emitter
+            hydrophones, semitters, ϕ = rotate_detector(hydrophones, semitters, semitters[rotate[2]].pos)
+        end
     else
         ϕ = 0.0
     end
