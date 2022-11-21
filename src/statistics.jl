@@ -1,7 +1,7 @@
-function Statistics.mean(event::Event)
-    mean([transmission.TOE for transmission in event.data])
+function Statistics.mean(event::Event, field::Symbol)
+    mean([getfield(transmission, field) for transmission in event.data])
 end
 
-function Statistics.std(event::Event)
-    std([transmission.TOE for transmission in event.data])
+function Statistics.std(event::Event, field::Symbol)
+    std([getfield(transmission, field) for transmission in event.data])
 end
