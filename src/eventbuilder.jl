@@ -82,6 +82,16 @@ struct Emitter
     pos::Position
 end
 """
+    function read(filename::AbstractString, Emitter, detector::Detector)
+
+Reads in the tripod file, and return them as Emitters, where the positions are references
+in the detector coordinate system.
+"""
+function read(filename::AbstractString, Emitter, detector::Detector)
+    tripods = read(filename, Tripod)
+    emitters = tripod_to_emitter(tripods, detector)
+end
+"""
     function tripod_to_emitter(tripods, detector)
 
 Tripods position reference gets changed, such that the position is measured from the position of the detector.
@@ -130,6 +140,7 @@ struct Event
     data::Vector{Transmission}
 end
 Base.length(T::Event) = T.length
+Base.show(event::Event) = print("Event from tripod $(event.id) with $(length(event)) transmissions.")
 """
 EventHeader contains the information aboout detector, emitter, run.
 """
