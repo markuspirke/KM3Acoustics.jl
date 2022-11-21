@@ -70,8 +70,8 @@ Method to set up the precalibration data type.
 """
 function Precalibration(detector_pos, events::Vector{Event}, hydrophones::OrderedDict{Int32, Hydrophone}, fixhydrophones, emitters::Dict{Int8, Emitter}, fixemitters; rotate=0, nevents=10)
     h_map = lookuptable_hydrophones(hydrophones)
-    sorted_events, numevents = sort_fitevents(events, :Q) #sort by Q factor
-    fitevents, numevents = group_fitevents(events::Vector{Event}, nevents)
+    sorted_events = sort_fitevents(events, :Q) #sort by Q factor
+    fitevents, numevents = group_fitevents(sorted_events, nevents)
     p0s, mapping = generate_startvalues(hydrophones, emitters, fixhydrophones, fixemitters, fitevents)
     if rotate != 0
         hydrophones, emitters, ϕ = rotate_detector(hydrophones, emitters, hydrophones[rotate].pos)
@@ -86,13 +86,18 @@ end
 
 Sorts a vector of events. Events with highest mean qualityfactor come first.
 """
-function sort_fitevents(events::Vector{Event}, field::Symbol)
+function sort_fitevents(events::Vector{Event}, field::Symbol; rev=false)
     xs = Float64[]
     for event in events
         x = mean([getfield(transmission, field) for transmission in event.data])
         push!(xs, x)
     end
-    events[sortperm(xs)]# sort the events by the highest mean quality
+    if !rev
+        sevents = events[sortperm(xs)]# sort the events by the highest mean quality
+    else
+        sevents = reverse(events[sortperm(xs)])
+    end
+    sevents
 end
 """
     function group_fitevents(events::Vector{Event}, nevents)
@@ -233,23 +238,27 @@ function (pc::Precalibration)(p::Vector{T}) where {T}
     ts = T[] #calculated time of arrivals
 
     idx_emitter = 0
-    idx_toes = 0
+    idx_event = 0
     n_transmissions = 0
     for (emitter_id, events) in pc.events
         idx_emitter += 1
         for event in events
-            idx_toes += 1
+            idx_event += 1
             for transmission in event.data
                 n_transmissions += 1
                 idx_hydro = pc.h_map[transmission.string]
                 R = norm(pos_hydros[idx_hydro] - pos_emitters[idx_emitter])
                 t = traveltime(R, pos_hydros[idx_hydro].z, pos_emitters[idx_emitter].z, pc.detector_pos.z)
-                t += toes[idx_toes]
+                t += toes[idx_event]
                 push!(ts, t)
                 push!(toas, transmission.TOA)
             end
         end
     end
+    @show mean(ts) mean(toas)
+    @show mean(ts) - mean(toas)
+    @show mean(ts - toas)
+    @show n_transmissions
     ndgf = n_transmissions - length(p)
     chi2(ts, toas)/ndgf
 end
