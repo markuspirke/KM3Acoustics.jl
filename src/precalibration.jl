@@ -89,7 +89,7 @@ Sorts a vector of events. Events with highest mean qualityfactor come first.
 function sort_fitevents(events::Vector{Event}, field::Symbol; rev=false)
     xs = Float64[]
     for event in events
-        x = mean([getfield(transmission, field) for transmission in event.data])
+        x = mean(event, field)
         push!(xs, x)
     end
     if !rev
