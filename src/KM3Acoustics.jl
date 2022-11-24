@@ -28,9 +28,9 @@ export
     init_toydetector, init_realdetector,
     ToyString, ToyModule, ToyDetector, toy_calc_pos, toy_calc_traveltime,
     string_length, string_inverselength, calc_pos, calc_traveltime,
-    get_hydrophones, Precalibration, precalibration_startvalues, rotate_detector,
+    get_hydrophones, Precalibration, precalibration_startvalues, rotate_detector, rerotate_detector,
     sort_fitevents, group_fitevents, generate_startvalues, lookuptable_hydrophones,
-    unwrap, split_p,
+    unwrap, split_p, get_opt_modules,
     get_opt_emitters, get_opt_hydrophones
 
 
