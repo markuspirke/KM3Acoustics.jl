@@ -184,12 +184,36 @@ function lookuptable_hydrophones(hydrophones::OrderedDict{Int32, Hydrophone})
     end
     lut_hydrophones
 end
+"""
+    function rotate_detector(hydrophones, emitters, pos)
 
+Rotates the whole detector, including hydrophones and emitters, such that the position which is given as an argument lies in yz plane.
+"""
 function rotate_detector(hydrophones, emitters, pos)
     pos = Position(pos.x, pos.y, 0.0) #look at the projection in the xy plane
     v = Position(1.0, 0.0, 0.0) # vector along x axis
     ϕ = angle(pos, v)
     M = [cos(ϕ) sin(ϕ) 0; -sin(ϕ) cos(ϕ) 0; 0 0 1] #rotation matrix
+
+    newhydrophones = typeof(hydrophones)()
+    for (id, hydrophone) in hydrophones
+        newpos = M*hydrophone.pos
+        newhydrophones[id] = Hydrophone(hydrophone.location, newpos)
+    end
+    newemitters = typeof(emitters)()
+    for (id, emitter) in emitters
+        newpos = M*emitter.pos
+        newemitters[id] = Emitter(id, newpos)
+    end
+    newhydrophones, newemitters, ϕ
+end
+"""
+    function rerotate_detector(hydrophones, emitters, ϕ)
+
+Rotates the whole detector back to the originally position.
+"""
+function rerotate_detector(hydrophones, emitters, ϕ)
+    M = [cos(ϕ) -sin(ϕ) 0; sin(ϕ) cos(ϕ) 0; 0 0 1] #rotation matrix
 
     newhydrophones = typeof(hydrophones)()
     for (id, hydrophone) in hydrophones

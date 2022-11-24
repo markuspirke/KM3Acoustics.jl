@@ -26,7 +26,15 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test 1 == length(pc1.events[7])
     @test toes[2] == eventtime(pc1.events[7][1])
 
-
+    testhydros = Dict([(1, Hydrophone(Location(0, 0), Position(0.0, 1.0, 0.0))), (2, Hydrophone(Location(0, 0), Position(1.0, 0.0, 0.0)))])
+    testtripods = Dict([(1, Emitter(1, Position(0.0, -1.0, 1.0)))])
+    rothydros, rottripods, ϕ = rotate_detector(testhydros, testtripods, Position(0.0,1.0, 0.0))
+    @test Position(1.0, 0.0, 0.0) ≈ rothydros[1].pos
+    @test Position(-1.0, 0.0, 1.0) ≈ rottripods[1].pos
+    @test pi/2 ≈ ϕ
+    rerothydros, rerottripods = rerotate_detector(rothydros, rottripods, ϕ)
+    @test testhydros[1].pos ≈ rerothydros[1].pos
+    @test testtripods[1].pos ≈ rerottripods[1].pos
     # pc = Precalibration(detector.pos, events, hydrophones, fixhydro, emitters, fixemitter, nevent=5)
 
     # pc = Precalibration(detector.pos, hydrophones, 10, events, emitters, numevents=3)
