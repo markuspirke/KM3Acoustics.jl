@@ -304,108 +304,32 @@ function (pc::Precalibration)(p::Vector{T}) where {T}
     ndgf = n_transmissions - length(p)
     chi2(ts, toas)/ndgf
 end
-
-# """
-#     function (pc::Precalibration)(p::Vector{T}) where {T}
-
-# Function which will be optimized for the precalibration of hydrophones and tripods. Returns a reduced chi2.
-# """
-# function (pc::Precalibration)(p::Vector{T}) where {T}
-#     n_hydro = length(pc.hydrophones) - 1 # number of not fixed hydrophones
-#     n_emitters = length(pc.emitters)
-#     pos_hydro = Position[]
-#     i = 1
-#     for (key, value) in pc.lut_hydrophones
-#         if key == pc.keys_fixhydro_z[1]
-#             push!(pos_hydro, Position(p[i], pc.hydrophones[key].pos.y, pc.hydrophones[key].pos.z))
-#             i += 1
-#         elseif key == pc.keys_fixhydro_z[2]
-#             push!(pos_hydro, Position(p[i], p[i+1], pc.hydrophones[key].pos.z))
-#             i += 2
-#         else
-#             push!(pos_hydro, Position(p[i], p[i+1], p[i+2]))
-#             i += 3
-#         end
-#     end
-#     pos_tripod = Position[]
-#     for j in 1:n_emitters
-#         push!(pos_tripod, Position(p[i], p[i+1], p[i+2]))
-#         i += 3
-#     end
-
-#     # pos_hydro = [Position(p[i], p[i+1], p[i+2]) for i in 1:3:3*n_hydro] #first arguments are positions of hydro
-#     # pos_tripod = [Position(p[i], p[i+1], p[i+2]) for i in 3*n_hydro+1:3:3*(n_hydro+n_emitters)] # then positions of tripods
-#     toes = p[i:end] # last entries are toes
-
-#     toas = T[] # measured time of arrivals
-#     ts = T[] #calculated time of arrivals
-#     index_event = 0
-#     n_transmissions = 0
-#     for (i, (emitter_id, events)) in enumerate(pc.events)
-#         for (j, event) in enumerate(events)
-#             index_event += 1
-#             for transmission in event.data
-#                 n_transmissions += 1
-#                 push!(toas, transmission.TOA)
-#                 if transmission.string == pc.key_fixhydro # if hydrophone x,y,z fixed
-#                     R = norm(pc.hydrophones[transmission.string].pos - pos_tripod[i])
-#                     t = traveltime(R, pc.hydrophones[transmission.string].pos.z, pos_tripod[i].z, pc.detector_pos.z)
-#                     t += toes[index_event]
-#                     push!(ts, t)
-#                 elseif transmission.string == pc.keys_fixhydro_z[1]
-#                     index_hydro = pc.lut_hydrophones[transmission.string]
-#                     R = norm(Position(pos_hydro[index_hydro].x, pc.hydrophones[transmission.string].pos.y, pc.hydrophones[transmission.string].pos.z)) #if y, z position is fixed
-#                     t = traveltime(R, pos_hydro[index_hydro].z, pos_tripod[i].z, pc.detector_pos.z)
-#                     t += toes[index_event]
-#                     push!(ts, t)
-#                 elseif transmission.string == pc.keys_fixhydro_z[2]
-#                     index_hydro = pc.lut_hydrophones[transmission.string]
-#                     R = norm(Position(pos_hydro[index_hydro].x, pos_hydro[index_hydro].y, pc.hydrophones[transmission.string].pos.z)) #if z position is fixed
-#                     t = traveltime(R, pos_hydro[index_hydro].z, pos_tripod[i].z, pc.detector_pos.z)
-#                     t += toes[index_event]
-#                     push!(ts, t)
-#                 else
-#                     index_hydro = pc.lut_hydrophones[transmission.string]
-#                     R = norm(pos_hydro[index_hydro] - pos_tripod[i])
-#                     t = traveltime(R, pos_hydro[index_hydro].z, pos_tripod[i].z, pc.detector_pos.z)
-#                     t += toes[index_event]
-#                     push!(ts, t)
-
-#                 end
-#             end
-#         end
-#     end
-#     ndgf = n_transmissions - length(p)
-#     chi2(ts, toas)/ndgf
-# end
-
 """
     (pc::Precalibration)(p::Vararg{T}) where {T} = pc([p...])
 
-Function which will be optimized for the precalibration of hydrophones and tripods. Returns a reduced chi2.
+Helper function for JuMP.
 """
 (pc::Precalibration)(p::Vararg{T}) where {T} = pc([p...])
+"""
+    function get_opt_modules(p, pc)
 
-function precalibration_startvalues(pc::Precalibration)
-    p0s = Float64[]
-    for k in collect(keys(pc.lut_hydrophones))
-        if k == pc.keys_fixhydro_z[1]
-            p0s = vcat(p0s, [pc.hydrophones[k].pos.x]) #only x component to fit
-        elseif k == pc.keys_fixhydro_z[2]
-            p0s = vcat(p0s, [pc.hydrophones[k].pos.x, pc.hydrophones[k].pos.y]) #only x,y components to fit
-        else
-            p0s = vcat(p0s, collect(pc.hydrophones[k].pos))
-        end
+Return two dictionaries of hydrophones and emitters, with precalibrated positions.
+"""
+function get_opt_modules(p, pc)
+    ps = unwrap(p, pc)
+    pos_hydros, pos_emitters, toes = split_p(ps, pc)
+    opt_hydrophones = typeof(pc.hydrophones)()
+    hydro_keys = collect(keys(pc.hydrophones))
+    for (i, pos) in enumerate(pos_hydros)
+        opt_hydrophones[hydro_keys[i]] = Hydrophone(pc.hydrophones[hydro_keys[i]].location, pos)
     end
-    for emitter in collect(values(pc.emitters))
-        p0s = vcat(p0s, collect(emitter.pos))
+
+    opt_emitters = typeof(pc.emitters)()
+    emitter_keys = collect(keys(pc.emitters))
+    for (i, pos) in enumerate()
+        opt_emitters[emitter_keys[i]] = Emitter(pc.emitters[emitter_keys[i]].id, pos)
     end
-    for events in values(pc.events)
-        for event in events
-            push!(p0s, eventtime(event))
-        end
-    end
-    p0s
+    rerotate_detector(opt_hydrophones, opt_emitters, pc.ϕ)
 end
 
 """
