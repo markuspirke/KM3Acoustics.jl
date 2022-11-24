@@ -127,6 +127,11 @@ function group_fitevents(events::Vector{Event}, nevents)
     sort(devents), nevents*length(devents)
 end
 
+"""
+    function select_fitevents(events, mask)
+
+Selects from the grouped events only certain events from different emitters.
+"""
 function select_fitevents(events, mask)
     newevents = Dict{Int8, Vector{Event}}()
     for (k, event) in events
