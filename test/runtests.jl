@@ -12,4 +12,5 @@ using Test
     include("geometry.jl")
     include("calibration.jl")
     include("precalibration.jl")
+    include("simulation.jl")
 end
