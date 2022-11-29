@@ -22,8 +22,8 @@ export
     mean, std,
     ASignal,
     SoundVelocity, velocity, traveltime,
-    read_toashort, Toashort, Emitter, tripod_to_emitter, emitter_to_tripod,
-    Receiver, Transmission, Event, isless, overlap, save_events,
+    read_toashort, RawToashort, Toashort, Emitter, tripod_to_emitter, emitter_to_tripod,
+    Receiver, Transmission, Event, isless, overlap, save_events, check_basemodules,
     read_events, group_events, eventtime,
     get_basemodules, ToyStringCalibration, StringCalibration, chi2,
     init_toydetector, init_realdetector,
@@ -31,8 +31,8 @@ export
     string_length, string_inverselength, calc_pos, calc_traveltime,
     get_hydrophones, Precalibration, precalibration_startvalues, rotate_detector, rerotate_detector,
     sort_fitevents, group_fitevents, generate_startvalues, lookuptable_hydrophones,
-    unwrap, split_p, get_opt_modules,
-    get_opt_emitters, get_opt_hydrophones
+    unwrap, split_p, get_opt_modules, precalib_detector,
+    inverse_waveforms, simulation_times, signal_impulses, acoustic_event, save_rawtoashorts
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
@@ -51,4 +51,5 @@ include("geometry.jl")
 include("calibration.jl")
 include("precalibration.jl")
 include("statistics.jl")
+include("simulation.jl")
 end
