@@ -7,4 +7,5 @@
 venv
 testdata
 plots
+notebooks
 *.org
