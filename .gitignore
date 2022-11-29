@@ -3,5 +3,8 @@
 *.jl.mem
 *.png
 *.h5
-/todo.org
 /Manifest.toml
+venv
+testdata
+plots
+*.org
