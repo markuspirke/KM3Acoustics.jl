@@ -3,6 +3,7 @@ module KM3Acoustics
 using Dates
 import Base: read, write, isless
 using LinearAlgebra
+using Random
 using AngleBetweenVectors
 using Statistics
 using Printf
