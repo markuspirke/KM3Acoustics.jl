@@ -23,10 +23,17 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test impulses[2] == 5.0
     @test impulses[end] == 50.0
 
-    hydrophones = read(joinpath(SAMPLES_DIR, "hydrophone.txt"))
-    basemoudles = check_basemodules(detector, hydrophones)
-
-
-
+    hydrophones = read(joinpath(SAMPLES_DIR, "hydrophone.txt"), Hydrophone)
+    basemodules = check_basemodules(detector, hydrophones)
+    tshort = acoustic_event(detector, emitters[7], invwaveform, basemodules, t0, 123; p=1.0)
+    @test length(basemodules) == length(tshort)
+    @test traveltime(basemodules[tshort[1].DOMID], emitters[7], detector.pos.z) ≈ tshort[1].UNIXTIMEBASE
+    @test 14 == tshort[1].EMITTERID
+    @test 123 == tshort[1].RUNNUMBER
+    @test 123 == tshort[1].RUN
+    @test traveltime(basemodules[tshort[end].DOMID], emitters[7], detector.pos.z) ≈ tshort[end].UNIXTIMEBASE
+    @test 14 == tshort[end].EMITTERID
+    @test 123 == tshort[end].RUNNUMBER
+    @test 123 == tshort[end].RUN
 
 end
