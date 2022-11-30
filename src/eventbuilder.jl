@@ -1,5 +1,5 @@
 """
-RawToaoshort is an input data type which stores all information from the toashort file.
+RawToashort is an input data type which stores all information from the toashort file.
 """
 struct RawToashort
     RUN::Int64
@@ -115,6 +115,33 @@ function emitter_to_tripod(emitters::Dict{Int8, Emitter}, detector)
         push!(tripods, Tripod(id, emitter.pos + detector.pos))
     end
     tripods
+end
+"""
+    function check_modules!(receivers, detector, hydrophones)
+
+Checks if the modules in detector have hydrophones or piezos, if they have they will be written in receiver and emitters dicts.
+"""
+function check_basemodules(detector, hydrophones)
+    receivers = Dict{Int32, Receiver}()
+
+    hydrophones_map = Dict{Int32, Hydrophone}()
+    for hydrophone ∈ hydrophones # makes a dictionary of hydrophones, with string number as keys
+        hydrophones_map[hydrophone.location.string] = hydrophone
+    end
+    n_hydro = 0
+    for (module_id, mod) ∈ detector.modules # go through all modules and check whether they are base modules and have hydrophone
+        if (mod.location.floor == 0 && hydrophoneenabled(mod))
+            if mod.location.string in keys(hydrophones_map)
+                n_hydro += 1
+                pos = hydrophones_map[mod.location.string].pos
+                pos += mod.pos
+                receivers[module_id] = Receiver(module_id, pos, mod.location, mod.t₀)
+            else
+                @warn "no hydrophone for string $(mod.location.string)"
+            end
+        end
+    end
+    receivers
 end
 """
 Datatype which has all information of one Transmission which is later needed for the fitting procedure.
