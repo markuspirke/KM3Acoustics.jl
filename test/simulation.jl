@@ -23,5 +23,10 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     @test impulses[2] == 5.0
     @test impulses[end] == 50.0
 
+    hydrophones = read(joinpath(SAMPLES_DIR, "hydrophone.txt"))
+    basemoudles = check_basemodules(detector, hydrophones)
+
+
+
 
 end
