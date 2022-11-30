@@ -2,6 +2,7 @@
 *.jl.cov
 *.jl.mem
 .DS_STORE
+*.vscode/
 *.png
 *.h5
 /Manifest.toml
