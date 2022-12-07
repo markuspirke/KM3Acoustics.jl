@@ -7,6 +7,7 @@ using Random
 using Setfield
 using AngleBetweenVectors
 using Statistics
+using Distributions
 using Printf
 using StaticArrays
 using HDF5
@@ -33,7 +34,7 @@ export
     get_hydrophones, Precalibration, precalibration_startvalues, rotate_detector, rerotate_detector,
     sort_fitevents, group_fitevents, generate_startvalues, lookuptable_hydrophones,
     unwrap, split_p, get_opt_modules, precalib_detector,
-    inverse_waveforms, simulation_times, signal_impulses, acoustic_event, save_rawtoashorts
+    inverse_waveforms, simulation_times, signal_impulses, acoustic_event, save_rawtoashorts, mutate_modules
 
 
 for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
