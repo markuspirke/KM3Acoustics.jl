@@ -31,30 +31,63 @@ function main()
     waveforms = read(joinpath(args["-i"], "waveform.txt"), Waveform)
     run = parse(Int, args["-r"])
 
-    basemodules = check_basemodules(detector, hydrophones)
+    modules = check_modules(detector, hydrophones)
     invwaveforms = inverse_waveforms(waveforms)
     t0 = datetime2unix(now())
     id_times = simulation_times(t0, emitters)
     rawtoashorts = RawToashort[]
 
     for (id, t) in id_times
-        tshorts = simulate(detector, emitters[id], invwaveforms, basemodules, t, run)
+        tshorts = simulate(detector, emitters[id], invwaveforms, modules, t, run)
         rawtoashorts = vcat(rawtoashorts, tshorts)
     end
     run_number = lpad(run, 8, '0')
     det_id = lpad(detector.id, 8, '0')
     filename = "KM3NeT_$(det_id)_$(run_number)_simtoashort.h5"
+    @show length(modules)
+    @show detector
+    @show length(rawtoashorts)
     save_rawtoashorts(filename, rawtoashorts, run)
 end
 
-function simulate(detector, emitter, invwaveforms, basemodules, t0, run)
+function simulate(detector, emitter, invwaveforms, modules, t0, run)
     ts = signal_impulses(t0)
     toashorts = RawToashort[]
     for t in ts
-        tshorts = acoustic_event(detector, emitter, invwaveforms, basemodules, t, run)
+        tshorts = acoustic_event(detector, emitter, invwaveforms, modules, t, run)
         toashorts = vcat(toashorts, tshorts)
     end
     toashorts
 end
 
+"""
+    function check_modules!(receivers, detector, hydrophones)
+
+Checks if the modules in detector have hydrophones or piezos, if they have they will be written in receiver and emitters dicts.
+"""
+function check_modules(detector, hydrophones)
+    receivers = Dict{Int32,Receiver}()
+
+    hydrophones_map = Dict{Int32,Hydrophone}()
+    for hydrophone ∈ hydrophones # makes a dictionary of hydrophones, with string number as keys
+        hydrophones_map[hydrophone.location.string] = hydrophone
+    end
+
+    for (module_id, mod) ∈ detector.modules # go through all modules and check whether they are base modules and have hydrophone
+        if (mod.location.floor == 0 && hydrophoneenabled(mod)) || (mod.location.floor != 0 && piezoenabled(mod)) #or they are no base module and have piezo
+            pos = Position(0, 0, 0)
+            if mod.location.floor == 0 # if base module and hydrophone
+                if mod.location.string in keys(hydrophones_map)
+                    pos += hydrophones_map[mod.location.string].pos # position in of hydrophone relative to T bar gets added
+                else
+                    @warn "no hydrophone for string $(mod.location.string)"
+                end
+            end
+            pos += mod.pos
+            receivers[module_id] = Receiver(module_id, pos, mod.location, mod.t₀)
+        end
+    end
+
+    receivers
+end
 main()

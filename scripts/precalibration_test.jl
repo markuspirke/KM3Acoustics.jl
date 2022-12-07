@@ -1,16 +1,39 @@
+doc = """Acoustics event builder for precalibration.
+
+Usage:
+  event_builder.jl [options]  -i INPUT_FILES_DIR -D DETX -e EVENTS -r RUNS
+  event_builder.jl -h | --help
+  event_builder.jl --version
+
+Options:
+  -D DETX             The detector description file.
+  -e EVENTS           Acoustics events for calibration.
+  -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt, waveform.txt
+  -r RUNS             The runs to analyse, e.g. 2 or 2:11 or 2,7,11.
+  -h --help           Show this screen.
+  --version           Show version.
+
+"""
+using DocOpt
 using KM3Acoustics
-pathtest = "/Users/markuspirke/Projects/KM3Acoustics/test/samples/"
-pathdir = "/Users/markuspirke/Projects/KM3Acoustics/testdata/00000133/"
-detector = Detector(joinpath(pathtest, "KM3NeT_00000133_00013346.detx"))
-events = read_events(joinpath(pathtest, "KM3NeT_00000133_00013346_preevent.h5"), 13346)
-hydrophones = get_hydrophones(joinpath(pathtest, "hydrophone.txt"), detector, events)
-emitters = read(joinpath(pathtest, "tripod.txt"), Emitter, detector)
-# tripods = read(joinpath(pathdir, "tripod.txt"), Tripod)
-# emitters = tripod_to_emitter(tripods, detector)
+using HDF5
+using ProgressMeter
 
-x = 10
-fixhydro = [(x, :x), (x, :y), (x, :z)]
-fixemitters = []
+function main()
+    args = docopt(doc)
+    println("Reading detector")
+    detector = Detector(args["-D"])
+    println("Reading events")
+    events = read_events(args["-e"], parse(Int, args["-r"]))
+    println("Reading hydrophones")
+    hydrophones = get_hydrophones(joinpath(args["-i"], "hydrophone.txt"), detector, events)
+    println("Reading tripods")
+    emitters = read(joinpath(args["-i"], "tripod.txt"), Emitter, detector)
 
-pc = Precalibration(detector.pos, events, hydrophones, fixhydro, emitters, fixemitters; rotate=0, nevents=10)
-@show pc(pc.p0s)
+    fixhydro = []
+    fixemitters = []
+    pc = Precalibration(detector.pos, events, hydrophones, fixhydro, emitters, fixemitters; rotate=0, nevents=10)
+    @show pc(pc.p0s)
+end
+
+main()
