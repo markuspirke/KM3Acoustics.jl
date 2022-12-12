@@ -7,7 +7,7 @@ dictionary of hydrophones which are involved in some event and in detector.
 function get_hydrophones(filename::AbstractString, detector::Detector, events::Vector{Event})
     hydrophones = read(filename, Hydrophone)
 
-    hydrophones_map = Dict{Int32, Hydrophone}()
+    hydrophones_map = Dict{Int32,Hydrophone}()
     for hydrophone ∈ hydrophones # makes a dictionary of hydrophones, with string number as keys
         hydrophones_map[hydrophone.location.string] = hydrophone
     end
@@ -22,7 +22,7 @@ function get_hydrophones(filename::AbstractString, detector::Detector, events::V
         end
     end
 
-    new_hydrophones = Dict{Int32, Hydrophone}()
+    new_hydrophones = Dict{Int32,Hydrophone}()
 
     for (module_id, mod) ∈ detector.modules # go through all modules and check whether they are base modules and have hydrophone
         if (mod.location.floor == 0 && hydrophoneenabled(mod))
@@ -32,7 +32,7 @@ function get_hydrophones(filename::AbstractString, detector::Detector, events::V
                 h = Hydrophone(hydrophones_map[mod.location.string].location, pos)
                 new_hydrophones[mod.location.string] = h
             elseif !(mod.location.string in hydrophones_signal)
-                @warn  "hydrophone from string not in events"
+                @warn "hydrophone from string not in events"
             else
                 @warn "no active hydrophone for string $(mod.location.string)"
             end
@@ -49,27 +49,27 @@ Data structure which stores all information needed for the precalibration proces
 """
 struct Precalibration <: Function
     detector_pos
-    events::OrderedDict{Int8, Vector{Event}}
+    events::OrderedDict{Int8,Vector{Event}}
     numevents
-    hydrophones::OrderedDict{Int32, Hydrophone}
+    hydrophones::OrderedDict{Int32,Hydrophone}
     h_map
     fixhydrophones
-    emitters::OrderedDict{Int8, Emitter}
+    emitters::OrderedDict{Int8,Emitter}
     fixemitters
     p0s
     mapping
     ϕ::Float64
-    # key_fixhydro::Int
-    # keys_fixhydro_z
-    # lut_hydrophones::OrderedDict{Int32, Int8}
 end
 """
     function Precalibration(detector_pos, hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro::Int, events::Vector{Event}, emitters::Dict{Int8, Emitter})
 
 Method to set up the precalibration data type.
 """
-function Precalibration(detector_pos, events::Vector{Event}, hydrophones::OrderedDict{Int32, Hydrophone}, fixhydrophones, emitters::Dict{Int8, Emitter}, fixemitters; rotate=0, nevents=10, mask=0)
+function Precalibration(detector_pos, events::Vector{Event}, hydrophones::OrderedDict{Int32,Hydrophone}, fixhydrophones, emitters::Dict{Int8,Emitter}, fixemitters; shift=false, rotate=0, nevents=10, mask=0)
     h_map = lookuptable_hydrophones(hydrophones)
+    if shift
+        events = shift_precalibration(events)
+    end
     sorted_events = sort_fitevents(events, :TOE, rev=false) #sort by Q factor
     fitevents, numevents = group_fitevents(sorted_events, nevents)
     if mask != 0
@@ -88,6 +88,24 @@ function Precalibration(detector_pos, events::Vector{Event}, hydrophones::Ordere
     end
     p0s, mapping = generate_startvalues(hydrophones, semitters, fixhydrophones, fixemitters, fitevents)
     Precalibration(detector_pos, fitevents, numevents, hydrophones, h_map, fixhydrophones, semitters, fixemitters, p0s, mapping, ϕ)
+end
+function shift_precalibration(events)
+    t0_shift = mean(mean.(events, :TOE))
+    sh_events = Event[]
+    for event in events
+        push!(sh_events, shift_event(event, t0_shift))
+    end
+    sh_events
+end
+function shift_transmission(tmission::Transmission, t0)
+    Transmission(tmission.id, tmission.string, tmission.floor, tmission.Q, tmission.TOA - t0, tmission.TOE - t0)
+end
+function shift_event(event, t0)
+    tmissions = Transmission[]
+    for t in event.data
+        push!(tmissions, shift_transmission(t, t0))
+    end
+    Event(event.oid, event.run, event.length, event.id, tmissions)
 end
 """
     function sort_events_qualityfactor(events::Vector{Event})
@@ -114,7 +132,7 @@ Groups a vector of sorted events, by the emitters which send the event. nevents 
 for fitting per emitter.
 """
 function group_fitevents(events::Vector{Event}, nevents)
-    devents = Dict{Int8, Vector{Event}}()
+    devents = Dict{Int8,Vector{Event}}()
     for event in events # sort the events from different emitters each up to 10 events
         if (event.id in keys(devents))
             if length(devents[event.id]) < nevents
@@ -124,7 +142,7 @@ function group_fitevents(events::Vector{Event}, nevents)
             devents[event.id] = [event]
         end
     end
-    sort(devents), nevents*length(devents)
+    sort(devents), nevents * length(devents)
 end
 
 """
@@ -133,13 +151,12 @@ end
 Selects from the grouped events only certain events from different emitters.
 """
 function select_fitevents(events, mask)
-    newevents = Dict{Int8, Vector{Event}}()
+    newevents = Dict{Int8,Vector{Event}}()
     for (k, event) in events
         newevents[k] = event[mask]
     end
-    sort(newevents), length(mask)*length(events)
+    sort(newevents), length(mask) * length(events)
 end
-
 """
     function generate_startvalues(hydrophones, emitters, fixhydrophones, fixemitters, fitevents)
 
@@ -181,8 +198,8 @@ end
     function lookuptable_hydrophones(hydrophones::OrderedDict{Int32, Hydrophone}, key_fixhydro::Int32)
 
 Returns a dictionary which maps the keys to the position in which they are sorted. First key -> 1, second key -> 2, .."""
-function lookuptable_hydrophones(hydrophones::OrderedDict{Int32, Hydrophone})
-    lut_hydrophones = OrderedDict{Int32, Int8}()
+function lookuptable_hydrophones(hydrophones::OrderedDict{Int32,Hydrophone})
+    lut_hydrophones = OrderedDict{Int32,Int8}()
     ks = collect(keys(hydrophones))
     for (i, k) in enumerate(ks)# set one hydrophones fix
         lut_hydrophones[k] = i
@@ -202,12 +219,12 @@ function rotate_detector(hydrophones, emitters, pos)
 
     newhydrophones = typeof(hydrophones)()
     for (id, hydrophone) in hydrophones
-        newpos = M*hydrophone.pos
+        newpos = M * hydrophone.pos
         newhydrophones[id] = Hydrophone(hydrophone.location, newpos)
     end
     newemitters = typeof(emitters)()
     for (id, emitter) in emitters
-        newpos = M*emitter.pos
+        newpos = M * emitter.pos
         newemitters[id] = Emitter(id, newpos)
     end
     newhydrophones, newemitters, ϕ
@@ -222,12 +239,12 @@ function rerotate_detector(hydrophones, emitters, ϕ)
 
     newhydrophones = typeof(hydrophones)()
     for (id, hydrophone) in hydrophones
-        newpos = M*hydrophone.pos
+        newpos = M * hydrophone.pos
         newhydrophones[id] = Hydrophone(hydrophone.location, newpos)
     end
     newemitters = typeof(emitters)()
     for (id, emitter) in emitters
-        newpos = M*emitter.pos
+        newpos = M * emitter.pos
         newemitters[id] = Emitter(id, newpos)
     end
     newhydrophones, newemitters, ϕ
@@ -263,8 +280,8 @@ end
 Splits the arguments of the fitting function into position of hydrophones, emitters and TOEs.
 """
 function split_p(ps, pc::Precalibration)
-    n_xyz_hydro = 3*length(pc.hydrophones)
-    n_xyz_emitter = 3*length(pc.emitters)
+    n_xyz_hydro = 3 * length(pc.hydrophones)
+    n_xyz_emitter = 3 * length(pc.emitters)
     n_xyz = n_xyz_hydro + n_xyz_emitter
     pos_hydros = [Position(ps[i], ps[i+1], ps[i+2]) for i in 1:3:n_xyz_hydro]
     pos_emitters = [Position(ps[i], ps[i+1], ps[i+2]) for i in n_xyz_hydro+1:3:n_xyz]
@@ -286,7 +303,10 @@ function (pc::Precalibration)(p::Vector{T}) where {T}
     idx_emitter = 0
     idx_event = 0
     n_transmissions = 0
+    n7 = 0
+    n8 = 0
     for (emitter_id, events) in pc.events
+
         idx_emitter += 1
         for event in events
             idx_event += 1
@@ -302,7 +322,7 @@ function (pc::Precalibration)(p::Vector{T}) where {T}
         end
     end
     ndgf = n_transmissions - length(p)
-    chi2(ts, toas)/ndgf
+    chi2(ts, toas) / ndgf
 end
 """
     (pc::Precalibration)(p::Vararg{T}) where {T} = pc([p...])
@@ -326,54 +346,26 @@ function get_opt_modules(p, pc)
 
     opt_emitters = typeof(pc.emitters)()
     emitter_keys = collect(keys(pc.emitters))
-    for (i, pos) in enumerate()
+    for (i, pos) in enumerate(pos_emitters)
         opt_emitters[emitter_keys[i]] = Emitter(pc.emitters[emitter_keys[i]].id, pos)
     end
     rerotate_detector(opt_hydrophones, opt_emitters, pc.ϕ)
 end
+function get_opt_toes(p, pc)
+    ps = unwrap(p, pc)
+    pos_hydros, pos_emitters, toes = split_p(ps, pc)
 
-"""
-    function get_opt_emitters(pc, p)
-
-Return a dictionary of emitters with precalibrated positions.
-"""
-function get_opt_emitters(pc::Precalibration, p)
-    n_hydro = length(pc.hydrophones) - 1 # number of not fixed hydrophones
-    n_emitters = length(pc.emitters)
-    pos_tripod = [Position(p[i], p[i+1], p[i+2]) for i in 3*n_hydro+1:3:3*(n_hydro+n_emitters)] # then positions of tripods
-    emitter_keys = collect(keys(pc.emitters))
-    opt_emitters = Dict{Int8, Emitter}()
-    for (i, pos) in enumerate(pos_tripod)
-        id = emitter_keys[i]
-        opt_emitters[id] = Emitter(id, pos)
-    end
-    opt_emitters
-end
-"""
-    function get_opt_hydrophones(pc, p)
-
-Return a dictionary of hydrophones with precalibrated positions.
-"""
-function get_opt_hydrophones(pc::Precalibration, p)
-    n_hydro = length(pc.hydrophones) - 1 # number of not fixed hydrophones
-    pos_hydro = [Position(p[i], p[i+1], p[i+2]) for i in 1:3:3*n_hydro] #first arguments are positions of hydro
-    hydro_keys = collect(keys(pc.lut_hydrophones))
-    opt_hydrophones = Dict{Int32, Hydrophone}()
-    for (i, pos) in enumerate(pos_hydro)
-        id = hydro_keys[i]
-        opt_hydrophones[id] = Hydrophone(pc.hydrophones[id].location, pos)
-    end
-    opt_hydrophones[pc.key_fixhydro] = pc.hydrophones[pc.key_fixhydro]
-    opt_hydrophones
+    toes
 end
 
-function detector_precalibration(detector::Detector, newhydrophones::Dict{Int32, Hydrophone}, filename::AbstractString)
+
+function precalib_detector(detector::Detector, newhydrophones, filename::AbstractString)
     hydrophones = read(filename, Hydrophone)
-    hydrophones_map = Dict{Int32, Hydrophone}()
+    hydrophones_map = Dict{Int32,Hydrophone}()
     for hydrophone ∈ hydrophones # makes a dictionary of hydrophones, with string number as keys
         hydrophones_map[hydrophone.location.string] = hydrophone
     end
-    new_modules = Dict{Int32, DetectorModule}()
+    new_modules = Dict{Int32,DetectorModule}()
     for mod ∈ detector
         if mod.location.string in keys(newhydrophones)
             pos = newhydrophones[mod.location.string].pos - hydrophones_map[mod.location.string].pos

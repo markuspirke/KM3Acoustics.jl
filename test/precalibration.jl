@@ -35,6 +35,11 @@ const SAMPLES_DIR = joinpath(@__DIR__, "samples")
     rerothydros, rerottripods = rerotate_detector(rothydros, rottripods, ϕ)
     @test testhydros[1].pos ≈ rerothydros[1].pos
     @test testtripods[1].pos ≈ rerottripods[1].pos
+
+    new_hydros, new_emitters = get_opt_modules(pc.p0s, pc)
+    newdetector = precalib_detector(detector, new_hydros, joinpath(SAMPLES_DIR, "hydrophone.txt"))
+
+
     # pc = Precalibration(detector.pos, events, hydrophones, fixhydro, emitters, fixemitter, nevent=5)
 
     # pc = Precalibration(detector.pos, hydrophones, 10, events, emitters, numevents=3)

@@ -45,10 +45,10 @@ function group_events(events::Vector{Event})
     toes = toes[p]
     events = events[p]
     i = 1
-    calib_events = Dict{Int8, Event}[]
+    calib_events = Dict{Int8,Event}[]
     while i < length(events)
         different_tripod = false
-        combined_events = Dict{Int8, Event}()
+        combined_events = Dict{Int8,Event}()
         combined_events[events[i].id] = events[i]
         j = i + 1
         while j < length(events)
@@ -63,7 +63,7 @@ function group_events(events::Vector{Event})
             end
             j += 1
         end
-        if  length(keys(combined_events)) >= 2
+        if length(keys(combined_events)) >= 2
             push!(calib_events, combined_events)
             i = j - 1
         end
@@ -110,7 +110,7 @@ function group_events1(events::Vector{Event})
     end
     calib_events
 end
-eventtime(event::Event) =  mean([transmission.TOE for transmission in event.data])
+eventtime(event::Event) = mean([transmission.TOE for transmission in event.data])
 """
     function get_basemodules(modules, hydrophones)
 
@@ -133,7 +133,7 @@ end
 Initializes an detector without calibration.
 """
 function init_toydetector(basemodules, modules)
-    strings = Dict{Int32, ToyString}()
+    strings = Dict{Int32,ToyString}()
     for basemod ∈ basemodules
         heights = Float64[]
         for (id, mod) ∈ modules
@@ -154,7 +154,7 @@ end
 Initializes an detector without calibration.
 """
 function init_realdetector(basemodules, modules)
-    strings = Dict{Int32, RealString}()
+    strings = Dict{Int32,RealString}()
     for basemod ∈ basemodules
         heights = Float64[]
         for (id, mod) ∈ modules
@@ -207,12 +207,12 @@ struct ToyStringCalibration <: Function
     basepos::Position
     events::Vector{CalibrationEvent}
     toes::Vector{Float64}
-    emitters::Dict{Int8, Emitter}
+    emitters::Dict{Int8,Emitter}
 end
 """
 Additional contructor for ToyStringCalibration.
 """
-function ToyStringCalibration(line::ToyString, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+function ToyStringCalibration(line::ToyString, events::Vector{Event}, emitters::Dict{Int8,Emitter})
     toes = eventtime.(events)
     time = mean(toes)
     cevents = CalibrationEvent[]
@@ -254,7 +254,7 @@ end
 struct ToyDetectorCalibration <: Function
     tscs::Vector{ToyStringCalibration}
 end
-function ToyDetectorCalibration(detector::ToyDetector, events::Vector{Event}, emitters::Dict{Int8, Emitter})
+function ToyDetectorCalibration(detector::ToyDetector, events::Vector{Event}, emitters::Dict{Int8,Emitter})
     strings = ToyStringCalibration[]
     for (id, string) in detector.strings
         push!(strings, ToyStringCalibration(string, events, emitters))
@@ -282,13 +282,13 @@ struct StringCalibration <: Function
     basepos::Position
     events::Vector{CalibrationEvent}
     toes::Vector{Float64}
-    tripods::Dict{Int8, Emitter}
+    tripods::Dict{Int8,Emitter}
 end
 
 """
 Additional contructor for StringCalibration.
 """
-function StringCalibration(a::Float64, b::Float64, line::RealString, events::Vector{Event}, tripods::Dict{Int8, Emitter})
+function StringCalibration(a::Float64, b::Float64, line::RealString, events::Vector{Event}, tripods::Dict{Int8,Emitter})
     toes = eventtime.(events)
     time = mean(toes)
     cevents = CalibrationEvent[]
@@ -317,7 +317,7 @@ function (sc::StringCalibration)(t1::T, t2::T, dx::T, dy::T) where {T<:Real}
     for (i, cevent) in enumerate(sc.events)
         for (j, transmission) in enumerate(cevent.transmissions)
             push!(toas, transmission.TOA)
-            t = calc_traveltime(dx, dy, cevent.lengths[j], sc.a, sc. b, sc.basepos, sc.tripods[cevent.id].pos)
+            t = calc_traveltime(dx, dy, cevent.lengths[j], sc.a, sc.b, sc.basepos, sc.tripods[cevent.id].pos)
             t += toes[i]
             push!(ts, t)
         end
@@ -328,7 +328,7 @@ end
 function chi2(toas, toas_measured; error=50e-6)
     x = 0.0
     for (i, toa) ∈ enumerate(toas)
-        x += (toa - toas_measured[i])^2/error^2
+        x += (toa - toas_measured[i])^2 / error^2
     end
     x
 end
