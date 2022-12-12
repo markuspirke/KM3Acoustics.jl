@@ -11,3 +11,4 @@ testdata
 plots
 notebooks
 *.org
+docs/build
