@@ -6,10 +6,8 @@ using LinearAlgebra
 using Random
 using Statistics
 using Distributions
-using Printf
 using Setfield
 using AngleBetweenVectors
-using StaticArrays
 using HDF5
 import DataStructures: DefaultDict
 import OrderedCollections: OrderedDict
