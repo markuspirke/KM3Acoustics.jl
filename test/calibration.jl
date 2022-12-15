@@ -1,4 +1,5 @@
 using KM3Acoustics
+using KM3io
 using Test
 using HDF5
 

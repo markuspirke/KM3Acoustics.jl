@@ -156,7 +156,7 @@ end
 Given to Positions, returns the time for an acoustic signal to travel between positions.
 Heights are referenced to z_reference.
 """
-function traveltime(x::Position{T}, y::Position{T}, z_reference) where {T<:Real}
+function traveltime(x::Position, y::Position, z_reference)
 
     v_1 = velocity(x.z, z_reference) #sound velocity at height of tripod
     v_2 = velocity(y.z, z_reference) #sound veloctity at height of module
