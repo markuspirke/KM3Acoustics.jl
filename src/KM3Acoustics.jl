@@ -15,14 +15,9 @@ import DataStructures: DefaultDict
 import OrderedCollections: OrderedDict
 
 export
-    Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT,
-    Position, UTMPosition, Location,
-    TriggerParameter,
-    hydrophoneenabled, piezoenabled, write_compound, natural, parse_runs,
-    Quaternion, Direction,
+    write_compound, natural, parse_runs,
     read, write,
     mean, std,
-    ASignal,
     SoundVelocity, velocity, traveltime,
     read_toashort, RawToashort, Toashort, Emitter, tripod_to_emitter, emitter_to_tripod,
     Receiver, Transmission, Event, isless, overlap, save_events, check_basemodules,
@@ -44,9 +39,7 @@ end
 
 include("types.jl")
 include("tools.jl")
-include("io.jl")
 include("utils.jl")
-include("acoustics.jl")
 include("soundvelocity.jl")
 include("eventbuilder.jl")
 include("geometry.jl")
