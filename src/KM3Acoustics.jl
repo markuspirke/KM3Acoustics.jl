@@ -34,11 +34,6 @@ export
     inverse_waveforms, simulation_times, signal_impulses, acoustic_event, save_rawtoashorts, mutate_modules
 
 
-for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
-    !endswith(inc, ".jl") && continue
-    include(inc)
-end
-
 include("types.jl")
 include("tools.jl")
 include("utils.jl")
