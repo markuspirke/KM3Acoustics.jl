@@ -4,15 +4,17 @@ using Dates
 import Base: read, write, isless
 using LinearAlgebra
 using Random
-using Setfield
-using AngleBetweenVectors
 using Statistics
 using Distributions
 using Printf
+using Setfield
+using AngleBetweenVectors
 using StaticArrays
 using HDF5
 import DataStructures: DefaultDict
 import OrderedCollections: OrderedDict
+
+using KM3io
 
 export
     write_compound, natural, parse_runs,
