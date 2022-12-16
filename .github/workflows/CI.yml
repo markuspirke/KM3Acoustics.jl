@@ -56,6 +56,10 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Pkg
+            Pkg.Registry.add(RegistrySpec(url = "https://git.km3net.de/common/julia-registry"))'
+      - run: |
+          julia --project=docs -e '
+            using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: |
