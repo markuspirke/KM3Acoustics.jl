@@ -56,7 +56,8 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Pkg
-            Pkg.Registry.add(RegistrySpec(url = "https://git.km3net.de/common/julia-registry"))'
+            Pkg.Registry.add(RegistrySpec(url = "https://git.km3net.de/common/julia-registry"))
+            Pkg.Registry.add(RegistrySpec(url = "https://github.com/JuliaRegistries/General"))'
       - uses: julia-actions/cache@v1
         with:
           cache-registries: "true"
