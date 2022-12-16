@@ -57,6 +57,9 @@ jobs:
           julia --project=docs -e '
             using Pkg
             Pkg.Registry.add(RegistrySpec(url = "https://git.km3net.de/common/julia-registry"))'
+      - uses: julia-actions/cache@v1
+        with:
+          cache-registries: "true"
       - run: |
           julia --project=docs -e '
             using Pkg
