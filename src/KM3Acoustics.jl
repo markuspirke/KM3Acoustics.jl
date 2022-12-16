@@ -32,8 +32,6 @@ export
     inverse_waveforms, simulation_times, signal_impulses, acoustic_event, save_rawtoashorts, mutate_modules
 
 
-include("types.jl")
-include("tools.jl")
 include("utils.jl")
 include("soundvelocity.jl")
 include("eventbuilder.jl")

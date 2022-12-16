@@ -2,7 +2,6 @@ using Test
 
 
 @testset "KM3Acoustics.jl" begin
-    include("tools.jl")
     include("soundvelocity.jl")
     include("eventbuilder.jl")
     include("geometry.jl")
