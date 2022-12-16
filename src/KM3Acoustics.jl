@@ -4,25 +4,20 @@ using Dates
 import Base: read, write, isless
 using LinearAlgebra
 using Random
-using Setfield
-using AngleBetweenVectors
 using Statistics
 using Distributions
-using Printf
-using StaticArrays
+using Setfield
+using AngleBetweenVectors
 using HDF5
 import DataStructures: DefaultDict
 import OrderedCollections: OrderedDict
 
+using KM3io
+
 export
-    Detector, Hydrophone, Tripod, Waveform, DetectorModule, PMT,
-    Position, UTMPosition, Location,
-    TriggerParameter,
-    hydrophoneenabled, piezoenabled, write_compound, natural, parse_runs,
-    Quaternion, Direction,
+    write_compound, natural, parse_runs,
     read, write,
     mean, std,
-    ASignal,
     SoundVelocity, velocity, traveltime,
     read_toashort, RawToashort, Toashort, Emitter, tripod_to_emitter, emitter_to_tripod,
     Receiver, Transmission, Event, isless, overlap, save_events, check_basemodules,
@@ -37,16 +32,7 @@ export
     inverse_waveforms, simulation_times, signal_impulses, acoustic_event, save_rawtoashorts, mutate_modules
 
 
-for inc ∈ readdir(joinpath(@__DIR__, "definitions"), join=true)
-    !endswith(inc, ".jl") && continue
-    include(inc)
-end
-
-include("types.jl")
-include("tools.jl")
-include("io.jl")
 include("utils.jl")
-include("acoustics.jl")
 include("soundvelocity.jl")
 include("eventbuilder.jl")
 include("geometry.jl")

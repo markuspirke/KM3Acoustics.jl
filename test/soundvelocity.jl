@@ -1,4 +1,5 @@
 using KM3Acoustics
+using KM3io
 using Test
 
 const SAMPLES_DIR = joinpath(@__DIR__, "samples")
