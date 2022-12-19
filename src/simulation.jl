@@ -41,13 +41,17 @@ function acoustic_event(detector, emitter, invwaveform, receivers, toe, run; p=1
         if rand() < p
             t = traveltime(emitter, receiver, detector.pos.z)
             toa = t + toe #+ rand(error)
-            tshort = RawToashort(run, run, toa, receiver.id, emitterwaveform, 0.0, 0.0) # obda set TOA_S = Q = 0
+            tshort = RawToashort(run, run, toa, receiver.id, emitterwaveform, 0.0, 99999.0) # obda set TOA_S = Q = 0
             push!(toashorts, tshort)
         end
     end
     toashorts
 end
+"""
+    function save_rawtoashorts(filename, toashorts, run)
 
+Saves toashorts data as a H5 file.
+"""
 function save_rawtoashorts(filename, toashorts, run)
     h5open(filename, "w") do h5f
         write_compound(h5f, "toashort/$(run)", toashorts)
@@ -95,6 +99,7 @@ function shift_modules(modules::T, s::Position) where {T<:OrderedDict}
     nmodules
 end
 
+shift_module(mod, s::Position) = @set mod.pos = mod.pos + s
 
 function diff_modules(m1s, m2s)
     Δs = Position[]

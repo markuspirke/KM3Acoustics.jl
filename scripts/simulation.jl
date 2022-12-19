@@ -1,14 +1,14 @@
-doc = """Acoustics event builder for precalibration.
+doc = """Simulation of acoustic events.
 
 Usage:
-  event_builder.jl [options]  -i INPUT_FILES_DIR -D DETX -r RUN
-  event_builder.jl -h | --help
-  event_builder.jl --version
+  simulation.jl [options]  -i INPUT_FILES_DIR -D DETX -r RUN
+  simulation.jl -h | --help
+  simulation.jl --version
 
 Options:
   -D DETX             The detector description file.
   -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt, waveform.txt
-  -r RUN             The runs to analyse, e.g. 2 or 2:11 or 2,7,11.
+  -r RUN              Run number for this simulation.
   -h --help           Show this screen.
   --version           Show version.
 
