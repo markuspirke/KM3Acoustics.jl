@@ -13,8 +13,9 @@ Just clone the following repository with
 > git clone https://git.km3net.de/common/julia-registry ~/.julia/registries/KM3NeT
 
 then you can just use this package in the usual way. For example
-
-> julia> import Pkg; Pkg.add("KM3Acoustics")
+```julia
+    julia> import Pkg; Pkg.add("KM3Acoustics")
+```
 
 You can also visit the KM3NeT GitLab site for more information, about the KM3NeT Julia registry, with the following link
 
