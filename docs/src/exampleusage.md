@@ -1,5 +1,17 @@
 ## Example usage
-For a complete detector calibration you need several input files, which you should put all in one directory. Here we will call this directory **workingdir**. The first file you need is a **.detx** file. This file stores the geometry of the detector. Then you need a **tripod.txt** file. This stores the ids and positions of the tripods, which are placed on the seabed. The ids in this tripod.txt however, are not the ids used in the acoustic data files coming from the database. To map the ids from the data base we need the **waveform.txt** file. Then a hyrophone is mounted on each basemodule. Here you need a **hydrophone.txt** file, which stores the positions of the hydrophones relative to the basemodule. Then there are a few more file which should be included in the workingdir. **acoustics_fit_parameters.txt**, **acoustics_trigger_parameters.txt** are need for the eventbuilding and calibration procedure. 
+For a complete detector calibration you need several input files, which you should put all in one directory. Here we will call this directory **workingdir**. The first file you need is a **.detx** file. This file stores the geometry of the detector. Then you need a **tripod.txt** file. This stores the ids and positions of the tripods, which are placed on the seabed. The ids in this tripod.txt however, are not the ids used in the acoustic data files coming from the database. To map the ids from the data base we need the **waveform.txt** file. Then a hyrophone is mounted on each basemodule. Here you need a **hydrophone.txt** file, which stores the positions of the hydrophones relative to the basemodule. Then there are a few more file which should be included in the workingdir. **acoustics\_fit_parameters.txt**, **acoustics\_trigger\_parameters.txt**, **mechanics.txt** are need for the eventbuilding and calibration procedure. The workingdir should then look like this
+```shell
+    workdir
+    ├── KM3NeT_00000049_00011190.detx
+    ├── acoustics_fit_parameters.txt
+    ├── acoustics_trigger_parameters.txt
+    ├── hydrophone.txt
+    ├── mechanics.txt
+    ├── sound_velocity.txt
+    ├── tripod.txt
+    └── waveform.txt
+```
+All of these files can be generated with jpp.
 ## Command Line Tools
 In the Github repository there are several scripts which you can use. It is easiest if one just clones the whole GitHub repository with
 
@@ -28,7 +40,7 @@ Each script needs a different set of command line arguments. Lets take a look at
     """
 ```
 There are 3 **mandatory** arguments:
-1. -i INPUT_FILES_DIR: should be the path to the working directory as mentioned in the earlier section.
+1. -i INPUT\_FILES\_DIR: should be the path to the working directory as mentioned in the earlier section.
 2. -D DETX: The .detx file with the detector geometry.
 3. -r RUN: This will be the run ID for the simulation data.
 
@@ -36,4 +48,4 @@ If you are in the KM3Acoustics directory where the workingdir in included you ca
 ```shell
     julia --project=. scripts/simulation.jl -i workingdir -D workingdir/detector.detx -r 123
 ```
-This will simulate acoustic events.
+This will simulate acoustic events for a 10 min time window. During this time intervall each tripod will send out 11 signals, each seperated by 5 seconds. The outout will be a .h5 file. 

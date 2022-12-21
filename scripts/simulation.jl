@@ -8,7 +8,7 @@ Usage:
 Options:
   -D DETX             The detector description file.
   -i INPUT_FILES_DIR  Directory containing tripod.txt, hydrophone.txt, waveform.txt
-  -r RUN              Run number for this simulation.
+  -r RUN              Run number for this simulation. Or to run multiple runs use 1:5.
   -h --help           Show this screen.
   --version           Show version.
 
@@ -29,25 +29,46 @@ function main()
     emitters = read(joinpath(args["-i"], "tripod.txt"), Emitter, detector)
     println("Reading waveforms")
     waveforms = read(joinpath(args["-i"], "waveform.txt"), Waveform)
-    run = parse(Int, args["-r"])
 
+    run = parse_runs(args["-r"])
     modules = check_modules(detector, hydrophones)
     invwaveforms = inverse_waveforms(waveforms)
     t0 = datetime2unix(now())
-    id_times = simulation_times(t0, emitters)
-    rawtoashorts = RawToashort[]
+    if typeof(run) == Int
+        id_times = simulation_times(t0, emitters)
+        rawtoashorts = RawToashort[]
 
-    for (id, t) in id_times
-        tshorts = simulate(detector, emitters[id], invwaveforms, modules, t, run)
-        rawtoashorts = vcat(rawtoashorts, tshorts)
+        for (id, t) in id_times
+            tshorts = simulate(detector, emitters[id], invwaveforms, modules, t, run)
+            rawtoashorts = vcat(rawtoashorts, tshorts)
+        end
+        run_number = lpad(run, 8, '0')
+        det_id = lpad(detector.id, 8, '0')
+        filename = "KM3NeT_$(det_id)_$(run_number)_simtoashort.h5"
+        @show length(modules)
+        @show detector
+        @show length(rawtoashorts)
+        save_rawtoashorts(filename, rawtoashorts, run)
+    elseif typeof(run) <: UnitRange
+        rawtoashorts = RawToashort[]
+        Δt = 60 * 10 # 10 minutes between sequence of acoustic events
+        runtimes = [t0 + i*Δt for i in 0:length(run)-1]
+        for runtime in runtimes
+            id_times = simulation_times(runtime, emitters)
+            for (i, (id, t)) in enumerate(id_times)
+                tshorts = simulate(detector, emitters[id], invwaveforms, modules, t, run[i])
+                rawtoashorts = vcat(rawtoashorts, tshorts)
+            end
+        end
+        run_min = lpad(run[1], 8, '0')
+        run_max = lpad(run[end], 8, '0')
+        det_id = lpad(detector.id, 8, '0')
+        filename = "KM3NeT_$(det_id)_$(run_min)_$(run_max)_simtoashort.h5"
+        @show length(modules)
+        @show detector
+        @show length(rawtoashorts)
+        save_rawtoashorts(filename, rawtoashorts, run)
     end
-    run_number = lpad(run, 8, '0')
-    det_id = lpad(detector.id, 8, '0')
-    filename = "KM3NeT_$(det_id)_$(run_number)_simtoashort.h5"
-    @show length(modules)
-    @show detector
-    @show length(rawtoashorts)
-    save_rawtoashorts(filename, rawtoashorts, run)
 end
 
 function simulate(detector, emitter, invwaveforms, modules, t0, run)
