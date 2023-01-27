@@ -24,7 +24,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 DataStructures = "0.18"
-DocOpt = "0.4"
+DocOpt = "0.4, 0.5"
 HDF5 = "0.16"
 Optim = "1"
 ProgressMeter = "1"
